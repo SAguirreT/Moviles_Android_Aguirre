@@ -10,4 +10,9 @@ class Software(
     override fun calcularImporte(): Double {
         return precio * cantidad
     }
+
+    override fun mostrarInfo(): String {
+        return String.format("%-20s x%d S/ %8.2f (licencia %s)",
+            nombre, cantidad, calcularImporte(), tipoLicencia)
+    }
 }

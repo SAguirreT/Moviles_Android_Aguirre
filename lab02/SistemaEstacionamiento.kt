@@ -4,6 +4,7 @@ fun main() {
     println("       SISTEMA DE ESTACIONAMIENTO")
     println("==========================================")
 
+    // INPUTS
     print("Ingrese la placa: ")
     val placa = readln()
 
@@ -16,10 +17,47 @@ fun main() {
     print("¿Es cliente frecuente? (S/N): ")
     val clienteFrecuente = readln()
 
+    // TARIFA BASE
+    var tarifaHora = 0.0
+
+    if (tipoVehiculo.equals("Moto", ignoreCase = true)) {
+        tarifaHora = 2.0
+    } else if (tipoVehiculo.equals("Auto", ignoreCase = true)) {
+        tarifaHora = 4.50
+    } else if (tipoVehiculo.equals("Camioneta", ignoreCase = true)) {
+        tarifaHora = 10.0
+    }
+
+    // CÁLCULO BASE
+    var importe = tarifaHora * horas
+
+    // RECARGO
+    var porcentajeRecargo = 0.0
+
+    if (horas > 2 && horas <= 5) {
+        porcentajeRecargo = 20.0
+        importe = importe + (importe * 0.20)
+    } else if (horas > 5) {
+        porcentajeRecargo = 50.0
+        importe = importe + (importe * 0.50)
+    }
+
+    // DESCUENTO CLIENTE FRECUENTE
+    var descuento = 0.0
+
+    if (clienteFrecuente.equals("S", ignoreCase = true)) {
+        descuento = importe * 0.10
+        importe = importe - descuento
+    }
+
+    // MOSTRAR CÁLCULOS
     println()
-    println("--------- DATOS INGRESADOS ---------")
-    println("Placa: $placa")
-    println("Tipo de vehículo: $tipoVehiculo")
-    println("Horas: $horas")
-    println("Cliente frecuente: $clienteFrecuente")
+    println("==========================================")
+    println("              CÁLCULOS")
+    println("==========================================")
+    println("Tarifa por hora: S/ %.2f".format(tarifaHora))
+    println("Importe inicial: S/ %.2f".format(tarifaHora * horas))
+    println("Recargo: %.0f%%".format(porcentajeRecargo))
+    println("Descuento: S/ %.2f".format(descuento))
+    println("Total a pagar: S/ %.2f".format(importe))
 }

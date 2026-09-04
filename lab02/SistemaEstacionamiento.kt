@@ -63,6 +63,12 @@ fun main() {
         importe = importe - descuentoMayor500
     }
 
+    // IGV 18%
+    val igv = importe * 0.18
+
+    // TOTAL FINAL
+    val totalPagar = importe + igv
+
     // MOSTRAR CÁLCULOS
     println()
     println("==========================================")
@@ -76,5 +82,7 @@ fun main() {
     println("Recargo: %.0f%%".format(porcentajeRecargo))
     println("Descuento cliente frecuente: S/ %.2f".format(descuento))
     println("Descuento por superar S/ 500: S/ %.2f".format(descuentoMayor500))
-    println("Total a pagar: S/ %.2f".format(importe))
+    println("Subtotal: S/ %.2f".format(importe))
+    println("IGV (18%%): S/ %.2f".format(igv))
+    println("TOTAL A PAGAR: S/ %.2f".format(totalPagar))
 }

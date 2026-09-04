@@ -1,3 +1,4 @@
+
 fun main() {
 
     println("==========================================")
@@ -8,7 +9,7 @@ fun main() {
     print("Ingrese la placa: ")
     val placa = readln()
 
-    print("Ingrese el tipo de vehículo (Moto/Auto/Camioneta): ")
+    print("Ingrese el tipo de vehículo (Moto/Auto/Camioneta/Trailer): ")
     val tipoVehiculo = readln()
 
     print("Ingrese la cantidad de horas: ")
@@ -23,9 +24,11 @@ fun main() {
     if (tipoVehiculo.equals("Moto", ignoreCase = true)) {
         tarifaHora = 2.0
     } else if (tipoVehiculo.equals("Auto", ignoreCase = true)) {
-        tarifaHora = 4.50
+        tarifaHora = 4.0
     } else if (tipoVehiculo.equals("Camioneta", ignoreCase = true)) {
         tarifaHora = 10.0
+    } else if (tipoVehiculo.equals("Trailer", ignoreCase = true)) {
+        tarifaHora = 20.0
     }
 
     // CÁLCULO BASE

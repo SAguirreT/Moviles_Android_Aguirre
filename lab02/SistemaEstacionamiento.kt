@@ -33,13 +33,16 @@ fun main() {
     // CÁLCULO BASE
     var importe = tarifaHora * horas
 
-    // RECARGO
+    // RECARGO POR HORAS
     var porcentajeRecargo = 0.0
 
-    if (horas > 2 && horas <= 5) {
+    if (horas >= 3 && horas <= 5) {
         porcentajeRecargo = 20.0
         importe = importe + (importe * 0.20)
-    } else if (horas > 5) {
+    } else if (horas >= 6 && horas <= 10) {
+        porcentajeRecargo = 40.0
+        importe = importe + (importe * 0.40)
+    } else if (horas >= 11) {
         porcentajeRecargo = 50.0
         importe = importe + (importe * 0.50)
     }
@@ -52,14 +55,26 @@ fun main() {
         importe = importe - descuento
     }
 
+    // DESCUENTO POR SUPERAR S/ 500
+    var descuentoMayor500 = 0.0
+
+    if (importe > 500) {
+        descuentoMayor500 = importe * 0.20
+        importe = importe - descuentoMayor500
+    }
+
     // MOSTRAR CÁLCULOS
     println()
     println("==========================================")
     println("              CÁLCULOS")
     println("==========================================")
+    println("Placa: $placa")
+    println("Tipo de vehículo: $tipoVehiculo")
+    println("Horas: $horas")
     println("Tarifa por hora: S/ %.2f".format(tarifaHora))
     println("Importe inicial: S/ %.2f".format(tarifaHora * horas))
     println("Recargo: %.0f%%".format(porcentajeRecargo))
-    println("Descuento: S/ %.2f".format(descuento))
+    println("Descuento cliente frecuente: S/ %.2f".format(descuento))
+    println("Descuento por superar S/ 500: S/ %.2f".format(descuentoMayor500))
     println("Total a pagar: S/ %.2f".format(importe))
 }

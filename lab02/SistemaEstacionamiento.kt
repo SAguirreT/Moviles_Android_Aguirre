@@ -4,17 +4,38 @@ fun main() {
     println("       SISTEMA DE ESTACIONAMIENTO")
     println("==========================================")
 
-    val aforoMaximo = 30
+    // DATOS DEL ESTACIONAMIENTO
+    print("Ingrese el nombre del estacionamiento: ")
+    val nombreEstacionamiento = readln().trim()
+
+    print("Ingrese la cantidad de aforo: ")
+    val aforoMaximo = readln().toInt()
+
     var vehiculosRegistrados = 0
 
+    println()
+    println("==========================================")
+    println("Estacionamiento: $nombreEstacionamiento")
+    println("Aforo máximo: $aforoMaximo")
+    println("Cantidad de horas máximas por vehículo: 32 horas")
+    println("==========================================")
+
+    // DATOS DEL CLIENTE
     print("Ingrese el nombre del cliente: ")
     val nombreCliente = readln().trim()
 
+    val maximoPorCliente = 5
     val resultados = mutableListOf<String>()
     var continuar = "S"
 
-    while (continuar.equals("S", ignoreCase = true) &&
-        vehiculosRegistrados < aforoMaximo) {
+    while (
+        continuar.equals("S", ignoreCase = true) &&
+        vehiculosRegistrados < aforoMaximo &&
+        vehiculosRegistrados < maximoPorCliente
+    ) {
+
+        println()
+        println("-------- REGISTRO DE VEHÍCULO --------")
 
         // DATOS DEL VEHÍCULO
         print("Ingrese la placa: ")
@@ -23,13 +44,31 @@ fun main() {
         print("Ingrese el tipo de vehículo (Moto/Auto/Camioneta/Trailer): ")
         val tipoVehiculo = readln().trim()
 
-        print("Ingrese la cantidad de horas: ")
-        val horas = readln().toInt()
+        // HORAS
+        var horas: Int
+
+        while (true) {
+            print("Ingrese la cantidad de horas: ")
+
+            val entradaHoras = readln().trim()
+
+            val horasIngresadas = entradaHoras.toLongOrNull()
+
+            if (horasIngresadas != null &&
+                horasIngresadas > 0 &&
+                horasIngresadas <= 32
+            ) {
+                horas = horasIngresadas.toInt()
+                break
+            }
+
+            println("Las horas permitidas por vehículo son máximo 32 horas.")
+        }
 
         print("¿Es cliente frecuente? (S/N): ")
         val clienteFrecuente = readln().trim()
 
-        // TARIFA POR TIPO DE VEHÍCULO
+        // TARIFA
         var tarifaHora = 0.0
 
         if (tipoVehiculo.equals("Moto", ignoreCase = true)) {
@@ -73,7 +112,7 @@ fun main() {
             importe -= descuentoFrecuente
         }
 
-        // DESCUENTO DEL 20% SI SUPERA S/ 500
+        // DESCUENTO MAYOR A S/ 500
         var descuentoMayor500 = 0.0
 
         if (importe > 500) {
@@ -84,7 +123,7 @@ fun main() {
         // IGV 18%
         val igv = importe * 0.18
 
-        // TOTAL FINAL
+        // TOTAL
         val totalPagar = importe + igv
 
         vehiculosRegistrados++
@@ -115,8 +154,27 @@ fun main() {
             )
         )
 
-        // PREGUNTAR SI DESEA AGREGAR OTRO VEHÍCULO
-        if (vehiculosRegistrados < aforoMaximo) {
+        // CONTROL DE LÍMITES
+        if (vehiculosRegistrados == maximoPorCliente) {
+
+            println()
+            println("==========================================")
+            println("       LÍMITE POR CLIENTE ALCANZADO")
+            println("==========================================")
+            println("El cliente solo puede registrar 5 vehículos.")
+            continuar = "N"
+
+        } else if (vehiculosRegistrados == aforoMaximo) {
+
+            println()
+            println("==========================================")
+            println("           AFORO ALCANZADO")
+            println("==========================================")
+            println("No se pueden registrar más vehículos.")
+            continuar = "N"
+
+        } else {
+
             println()
             print("¿Desea agregar otro vehículo? (S/N): ")
             continuar = readln().trim()
@@ -128,6 +186,7 @@ fun main() {
     println("==========================================")
     println("           RESULTADO FINAL")
     println("==========================================")
+    println("Estacionamiento: $nombreEstacionamiento")
     println("Cliente: $nombreCliente")
     println()
 
@@ -139,15 +198,6 @@ fun main() {
     // AFORO
     println("Aforo ocupado    : $vehiculosRegistrados / $aforoMaximo")
     println("Aforo disponible : ${aforoMaximo - vehiculosRegistrados}")
-
-    // MENSAJE SI LLEGA AL MÁXIMO
-    if (vehiculosRegistrados == aforoMaximo) {
-        println()
-        println("==========================================")
-        println("           AFORO ALCANZADO")
-        println("==========================================")
-        println("No se pueden registrar más vehículos.")
-    }
 
     println("==========================================")
 }

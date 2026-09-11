@@ -4,8 +4,41 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.aguirre.registronotas.ui.theme.RegistroNotasTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 val MoradoPrincipal = Color(0xFF6A4C93)
 val MoradoClaroFondo = Color(0xFFF3EEFB)
 val MoradoBadge = Color(0xFFD8CDEE)
@@ -31,9 +64,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-annotation class RegistroNotasScreen
-
 data class Curso(val nombre: String, val peso: Float)
 
 val cursos = listOf(
@@ -42,3 +72,189 @@ val cursos = listOf(
     Curso("Programación en Móviles", 0.30f),
     Curso("Base de Datos", 0.25f)
 )
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RegistroNotasScreen() {
+    var nota1 by remember { mutableStateOf(0f) }
+    var nota2 by remember { mutableStateOf(0f) }
+    var nota3 by remember { mutableStateOf(0f) }
+    var nota4 by remember { mutableStateOf(0f) }
+    var redondear by remember { mutableStateOf(false) }
+    var confirmado by remember { mutableStateOf(false) }
+    var mostrarResultado by remember { mutableStateOf(false) }
+    var promedioPonderado by remember { mutableStateOf(0.0) }
+    var promedioFinal by remember { mutableStateOf(0.0) }
+    var observacion by remember { mutableStateOf("") }
+    var redondeadoAlCalcular by remember { mutableStateOf(false) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "Registro de Notas",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MoradoPrincipal,
+                    titleContentColor = Color.White
+                )
+            )
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(MoradoClaroFondo, Color.White)
+                    )
+                )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
+            ) {
+
+                Text(
+                    text = "Notas del ciclo",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color(0xFF2B2140)
+                )
+                Text(
+                    text = "Desliza para asignar cada nota (0 a 20)",
+                    fontSize = 13.sp,
+                    color = GrisTextoSecundario
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                FilaCurso(cursos[0], nota1) { nota1 = it }
+                Spacer(modifier = Modifier.height(14.dp))
+                FilaCurso(cursos[1], nota2) { nota2 = it }
+                Spacer(modifier = Modifier.height(14.dp))
+                FilaCurso(cursos[2], nota3) { nota3 = it }
+                Spacer(modifier = Modifier.height(14.dp))
+                FilaCurso(cursos[3], nota4) { nota4 = it }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Redondear promedio final", color = Color(0xFF2B2140))
+                    Switch(
+                        checked = redondear,
+                        onCheckedChange = { redondear = it },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = MoradoPrincipal
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // ---- Checkbox confirmación ----
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Checkbox(
+                        checked = confirmado,
+                        onCheckedChange = { confirmado = it },
+                        colors = CheckboxDefaults.colors(checkedColor = MoradoPrincipal)
+                    )
+                    Text("Confirmo que las notas son correctas", color = Color(0xFF2B2140))
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        val ponderado =
+                            nota1 * 0.20 + nota2 * 0.25 + nota3 * 0.30 + nota4 * 0.25
+                        promedioPonderado = ponderado
+
+                        promedioFinal = if (redondear) {
+                            ponderado.roundToInt().toDouble()
+                        } else {
+                            ponderado
+                        }
+
+                        observacion = when {
+                            promedioFinal >= 17.0 -> "EXCELENTE"
+                            promedioFinal >= 13.0 -> "APROBADO"
+                            promedioFinal >= 10.0 -> "EN RECUPERACIÓN"
+                            else -> "DESAPROBADO"
+                        }
+
+                        redondeadoAlCalcular = redondear
+                        mostrarResultado = true
+                    },
+                    enabled = confirmado,
+                    shape = RoundedCornerShape(50),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MoradoPrincipal,
+                        disabledContainerColor = Color(0xFFCFC7DD)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                ) {
+                    Text("CALCULAR PROMEDIO", fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (mostrarResultado) {
+                    TarjetaResultado(
+                        promedioPonderado = promedioPonderado,
+                        promedioFinal = promedioFinal,
+                        redondear = redondeadoAlCalcular,
+                        observacion = observacion
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "✓ Promedio calculado correctamente",
+                        color = VerdeTexto,
+                        fontSize = 13.sp
+                    )
+                } else {
+                    Text(
+                        text = "Asigna las notas y confirma para calcular",
+                        color = GrisTextoSecundario,
+                        fontSize = 13.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // ---- Pie fijo ----
+                Text(
+                    text = "Desarrollado por: Sheila Aguirre",
+                    fontSize = 12.sp,
+                    color = GrisTextoSecundario,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun TarjetaResultado(
+    promedioPonderado: ERROR,
+    promedioFinal: ERROR,
+    redondear: ERROR,
+    observacion: ERROR
+) {
+    TODO("Not yet implemented")
+}

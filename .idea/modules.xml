@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Moviles_Android_Aguirre.iml" filepath="$PROJECT_DIR$/.idea/Moviles_Android_Aguirre.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Lab04CarritoTecusp.iml" filepath="$PROJECT_DIR$/.idea/modules/Lab04CarritoTecusp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Lab04CarritoTecusp.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Lab04CarritoTecusp.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Lab04CarritoTecusp.app.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Lab04CarritoTecusp.app.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Lab04CarritoTecusp.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Lab04CarritoTecusp.app.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Lab04CarritoTecusp.app.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Lab04CarritoTecusp.app.unitTest.iml" />
     </modules>
   </component>
 </project>

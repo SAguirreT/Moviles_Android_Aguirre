@@ -31,9 +31,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.aguirre.Lab04CarritoAguirre.ui.theme.Lab04CarritoTecuspTheme
+import java.util.Locale
 
 
 class MainActivity : ComponentActivity() {
@@ -51,11 +53,12 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun PantallaCarrito() {
-
+    // Estados del formulario
     var nombre by remember { mutableStateOf("") }
     var precio by remember { mutableStateOf("") }
     var cantidad by remember { mutableStateOf("") }
 
+    // Estado: lista observable
     val productos = remember { mutableStateListOf<Producto>() }
 
     Column(
@@ -70,6 +73,7 @@ fun PantallaCarrito() {
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
+        // ---------- Formulario ----------
         OutlinedTextField(
             value = nombre,
             onValueChange = { nombre = it },
@@ -106,6 +110,7 @@ fun PantallaCarrito() {
 
                 if (nombre.isNotBlank() && precioNum > 0 && cantidadNum > 0) {
                     productos.add(Producto(nombre, precioNum, cantidadNum))
+                    // Limpiar los 3 campos
                     nombre = ""
                     precio = ""
                     cantidad = ""
@@ -118,6 +123,7 @@ fun PantallaCarrito() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // ---------- LazyColumn ----------
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
@@ -134,6 +140,7 @@ fun PantallaCarrito() {
     }
 }
 
+// ---------- COMMIT 4: TarjetaProducto completa ----------
 @Composable
 fun TarjetaProducto(producto: Producto, onEliminar: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -144,8 +151,23 @@ fun TarjetaProducto(producto: Producto, onEliminar: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = producto.nombre,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "S/ ${formatearMonto(producto.precio)} x ${producto.cantidad}",
+                    color = Color.Gray
+                )
             }
 
+            val importe = producto.precio * producto.cantidad
+            Text(
+                text = "S/ ${formatearMonto(importe)}",
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(end = 8.dp)
+            )
 
             IconButton(onClick = onEliminar) {
                 Icon(
@@ -156,4 +178,8 @@ fun TarjetaProducto(producto: Producto, onEliminar: () -> Unit) {
             }
         }
     }
+}
+
+fun formatearMonto(valor: Double): String {
+    return String.format(Locale.US, "%.2f", valor)
 }

@@ -11,7 +11,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            // Llama al grafo general de navegación para iniciar el flujo de la app
             AppNavigation()
         }
     }

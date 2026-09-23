@@ -1,45 +1,46 @@
 package com.tuapp.navlab.screens
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.tuapp.navlab.navigation.Screen
 
-val sampleItems = listOf(
-    1 to "Juan León - Sistemas",
-    2 to "María García - Arquitectura",
-    3 to "Carlos Pérez - Medicina",
-    4 to "Ana López - Derecho"
-)
-
-@Optin(ExperimentalMaterial3Api::class)
+@kotlin.OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListScreen(navController: NavController) {
+    // Generación de lista de 8 elementos
+    val items = (1..8).map { "Elemento numero $it" }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Directorio") },
+                title = { Text("Lista") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    TextButton(onClick = { navController.popBackStack() }) {
+                        Text("< Volver")
                     }
                 }
             )
         }
-    ) { paddingValues ->
-        LazyColumn(contentPadding = paddingValues) {
-            items(sampleItems) { item ->
+    ) { padding ->
+        // Renderizado optimizado mediante LazyColumn
+        LazyColumn(contentPadding = padding) {
+            items(count = items.size) { index ->
                 ListItem(
-                    headlineContent = { Text(item.second) },
+                    headlineContent = { Text(items[index]) },
+                    supportingContent = { Text("Toca para ver el detalle") },
                     modifier = Modifier.clickable {
-                        navController.navigate(Screen.Detail.createRoute(item.first))
+                        // Navegación enviando el ID correlativo
+                        navController.navigate(Screen.Detail.createRoute(itemId = index + 1))
                     }
                 )
                 HorizontalDivider()

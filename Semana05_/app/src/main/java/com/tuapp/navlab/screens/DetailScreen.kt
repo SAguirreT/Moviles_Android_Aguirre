@@ -15,14 +15,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
+
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(navController: NavController, itemId: Int) {
+    // Estructura Scaffold para mantener consistencia con la TopAppBar superior
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Detalle del Elemento") },
                 navigationIcon = {
+                    // Retorno a la pantalla anterior
                     TextButton(onClick = { navController.popBackStack() }) {
                         Text("< Volver")
                     }

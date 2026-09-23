@@ -1,2 +1,35 @@
 package com.tuapp.navlab.screens
 
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.tuapp.navlab.navigation.Screen
+
+@Composable
+fun HomeScreen(navController: NavController) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = "¡Bienvenido!", style = MaterialTheme.typography.headlineLarge)
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = { navController.navigate(Screen.List.route) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Ver Directorio / Lista")
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        OutlinedButton(
+            onClick = { navController.navigate(Screen.Profile.route) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Mi Perfil")
+        }
+    }
+}

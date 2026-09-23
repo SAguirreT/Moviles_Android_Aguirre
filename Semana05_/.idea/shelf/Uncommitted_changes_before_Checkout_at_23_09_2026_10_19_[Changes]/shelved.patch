@@ -1,0 +1,1095 @@
+Index: app/build.gradle.kts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>plugins {\r\n    alias(libs.plugins.android.application)\r\n    alias(libs.plugins.kotlin.compose)\r\n}\r\n\r\nandroid {\r\n    namespace = \"com.tuapp.navlab\"\r\n    compileSdk {\r\n        version = release(37)\r\n    }\r\n\r\n    defaultConfig {\r\n        applicationId = \"com.tuapp.navlab\"\r\n        minSdk = 24\r\n        targetSdk = 37\r\n        versionCode = 1\r\n        versionName = \"1.0\"\r\n\r\n        testInstrumentationRunner = \"androidx.test.runner.AndroidJUnitRunner\"\r\n    }\r\n\r\n    buildTypes {\r\n        release {\r\n            optimization {\r\n                enable = false\r\n            }\r\n        }\r\n    }\r\n    compileOptions {\r\n        sourceCompatibility = JavaVersion.VERSION_11\r\n        targetCompatibility = JavaVersion.VERSION_11\r\n    }\r\n    buildFeatures {\r\n        compose = true\r\n    }\r\n}\r\n\r\ndependencies {\r\n    implementation(platform(libs.androidx.compose.bom))\r\n    implementation(libs.androidx.activity.compose)\r\n    implementation(libs.androidx.compose.material3)\r\n    implementation(libs.androidx.compose.ui)\r\n    implementation(libs.androidx.compose.ui.graphics)\r\n    implementation(libs.androidx.compose.ui.tooling.preview)\r\n    implementation(libs.androidx.core.ktx)\r\n    implementation(libs.androidx.lifecycle.runtime.ktx)\r\n    testImplementation(libs.junit)\r\n    androidTestImplementation(platform(libs.androidx.compose.bom))\r\n    androidTestImplementation(libs.androidx.compose.ui.test.junit4)\r\n    androidTestImplementation(libs.androidx.espresso.core)\r\n    androidTestImplementation(libs.androidx.junit)\r\n    debugImplementation(libs.androidx.compose.ui.test.manifest)\r\n    debugImplementation(libs.androidx.compose.ui.tooling)\r\n    implementation(\"androidx.navigation:navigation-compose:2.7.7\")\r\n}
+===================================================================
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+--- a/app/build.gradle.kts	(revision dd993aa3afae89a90aa9892ab9de0f68b56f734a)
++++ b/app/build.gradle.kts	(date 1790174101660)
+@@ -52,4 +52,8 @@
+     debugImplementation(libs.androidx.compose.ui.test.manifest)
+     debugImplementation(libs.androidx.compose.ui.tooling)
+     implementation("androidx.navigation:navigation-compose:2.7.7")
++    // Biblioteca Coil para carga de imágenes desde URL (avatares)
++    implementation("io.coil-kt:coil-compose:2.6.0")
++    // Material Icons Extended para iconos adicionales (Email, Lock, ExitToApp, Visibility, etc.)
++    implementation("androidx.compose.material:material-icons-extended")
+ }
+\ No newline at end of file
+Index: app/src/main/java/com/tuapp/navlab/screens/DetailScreen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.tuapp.navlab.screens\r\n\r\nimport androidx.compose.foundation.layout.*\r\nimport androidx.compose.material3.*\r\nimport androidx.compose.runtime.Composable\r\nimport androidx.compose.ui.Modifier\r\nimport androidx.compose.ui.unit.dp\r\nimport androidx.navigation.NavController\r\n\r\n@kotlin.OptIn(ExperimentalMaterial3Api::class)\r\n@Composable\r\nfun DetailScreen(navController: NavController, itemId: Int) {\r\n    Scaffold(\r\n        topBar = {\r\n            TopAppBar(\r\n                title = { Text(\"Detalle del elemento\") },\r\n                navigationIcon = {\r\n                    TextButton(onClick = { navController.popBackStack() }) {\r\n                        Text(\"←\")\r\n                    }\r\n                }\r\n            )\r\n        }\r\n    ) { paddingValues ->\r\n        Column(\r\n            modifier = Modifier\r\n                .padding(paddingValues)\r\n                .padding(24.dp)\r\n        ) {\r\n            Text(\r\n                text = \"Elemento #$itemId\",\r\n                style = MaterialTheme.typography.headlineSmall\r\n            )\r\n\r\n            Spacer(modifier = Modifier.height(16.dp))\r\n\r\n            Surface(\r\n                color = MaterialTheme.colorScheme.surfaceVariant,\r\n                shape = MaterialTheme.shapes.medium,\r\n                modifier = Modifier.fillMaxWidth()\r\n            ) {\r\n                Column(modifier = Modifier.padding(16.dp)) {\r\n                    Text(text = \"ID recibido: $itemId\")\r\n                    Spacer(modifier = Modifier.height(4.dp))\r\n                    Text(\r\n                        text = \"Este valor llegó como argumento tipado Int desde el NavHost.\",\r\n                        style = MaterialTheme.typography.bodySmall\r\n                    )\r\n                }\r\n            }\r\n        }\r\n    }\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/tuapp/navlab/screens/DetailScreen.kt b/app/src/main/java/com/tuapp/navlab/screens/DetailScreen.kt
+--- a/app/src/main/java/com/tuapp/navlab/screens/DetailScreen.kt	(revision dd993aa3afae89a90aa9892ab9de0f68b56f734a)
++++ b/app/src/main/java/com/tuapp/navlab/screens/DetailScreen.kt	(date 1790174933576)
+@@ -1,53 +1,236 @@
+ package com.tuapp.navlab.screens
+ 
++import androidx.compose.foundation.BorderStroke
++import androidx.compose.foundation.background
++import androidx.compose.foundation.border
+ import androidx.compose.foundation.layout.*
++import androidx.compose.foundation.rememberScrollState
++import androidx.compose.foundation.shape.CircleShape
++import androidx.compose.foundation.shape.RoundedCornerShape
++import androidx.compose.foundation.verticalScroll
++import androidx.compose.material.icons.Icons
++import androidx.compose.material.icons.automirrored.filled.ArrowBack
++import androidx.compose.material.icons.filled.Badge
++import androidx.compose.material.icons.filled.Email
++import androidx.compose.material.icons.filled.School
+ import androidx.compose.material3.*
+ import androidx.compose.runtime.Composable
++import androidx.compose.ui.Alignment
+ import androidx.compose.ui.Modifier
++import androidx.compose.ui.draw.clip
++import androidx.compose.ui.graphics.Color
++import androidx.compose.ui.layout.ContentScale
++import androidx.compose.ui.text.font.FontWeight
+ import androidx.compose.ui.unit.dp
+ import androidx.navigation.NavController
++import coil.compose.AsyncImage
++import com.tuapp.navlab.model.Student
++import com.tuapp.navlab.ui.theme.BackgroundLilac
++import com.tuapp.navlab.ui.theme.BrandGradient
++import com.tuapp.navlab.ui.theme.DetailCardGray
++import com.tuapp.navlab.ui.theme.PurpleMid
+ 
+-@kotlin.OptIn(ExperimentalMaterial3Api::class)
++@OptIn(ExperimentalMaterial3Api::class)
+ @Composable
+-fun DetailScreen(navController: NavController, itemId: Int) {
++fun DetailScreen(navController: NavController, student: Student) {
+     Scaffold(
+         topBar = {
+             TopAppBar(
+-                title = { Text("Detalle del elemento") },
++                title = { Text("Expediente Académico", color = Color.White) },
+                 navigationIcon = {
+-                    TextButton(onClick = { navController.popBackStack() }) {
+-                        Text("←")
++                    IconButton(onClick = { navController.popBackStack() }) {
++                        Icon(
++                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
++                            contentDescription = "Volver",
++                            tint = Color.White
++                        )
+                     }
+-                }
++                },
++                colors = TopAppBarDefaults.topAppBarColors(containerColor = PurpleMid)
+             )
+-        }
++        },
++        containerColor = BackgroundLilac
+     ) { paddingValues ->
+         Column(
+             modifier = Modifier
++                .fillMaxSize()
+                 .padding(paddingValues)
+-                .padding(24.dp)
++                .verticalScroll(rememberScrollState()),
++            horizontalAlignment = Alignment.CenterHorizontally
+         ) {
++            // Header superior con BrandGradient y esquinas inferiores redondeadas (32.dp)
++            Box(
++                modifier = Modifier
++                    .fillMaxWidth()
++                    .height(180.dp)
++                    .background(
++                        brush = BrandGradient,
++                        shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
++                    )
++            )
++
++            // Avatar circular grande (96.dp) superpuesto mediante offset negativo sobre el header
++            Box(
++                modifier = Modifier
++                    .offset(y = (-48).dp)
++                    .size(96.dp)
++                    .border(BorderStroke(4.dp, Color.White), CircleShape)
++                    .clip(CircleShape),
++                contentAlignment = Alignment.Center
++            ) {
++                AsyncImage(
++                    model = student.avatarUrl,
++                    contentDescription = student.name,
++                    modifier = Modifier.fillMaxSize(),
++                    contentScale = ContentScale.Crop
++                )
++            }
++
++            // Nombre y carrera centrados debajo del avatar
++            Spacer(modifier = Modifier.height((-36).dp))
++
+             Text(
+-                text = "Elemento #$itemId",
+-                style = MaterialTheme.typography.headlineSmall
++                text = student.name,
++                style = MaterialTheme.typography.headlineSmall,
++                fontWeight = FontWeight.Bold,
++                color = PurpleMid
+             )
+ 
+-            Spacer(modifier = Modifier.height(16.dp))
+-
+-            Surface(
+-                color = MaterialTheme.colorScheme.surfaceVariant,
+-                shape = MaterialTheme.shapes.medium,
+-                modifier = Modifier.fillMaxWidth()
+-            ) {
+-                Column(modifier = Modifier.padding(16.dp)) {
+-                    Text(text = "ID recibido: $itemId")
+-                    Spacer(modifier = Modifier.height(4.dp))
++            Spacer(modifier = Modifier.height(4.dp))
++
++            Text(
++                text = student.career,
++                style = MaterialTheme.typography.bodyLarge,
++                color = Color.Gray,
++                fontWeight = FontWeight.Medium
++            )
++
++            Spacer(modifier = Modifier.height(20.dp))
++
++            // UNA SOLA Card con fondo DetailCardGray y esquinas de 18.dp
++            Card(
++                modifier = Modifier
++                    .fillMaxWidth()
++                    .padding(horizontal = 24.dp),
++                shape = RoundedCornerShape(18.dp),
++                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
++                colors = CardDefaults.cardColors(containerColor = DetailCardGray)
++            ) {
++                Column(
++                    modifier = Modifier
++                        .fillMaxWidth()
++                        .padding(16.dp)
++                ) {
++                    // Fila ID Estudiante
++                    Row(
++                        modifier = Modifier.fillMaxWidth(),
++                        verticalAlignment = Alignment.CenterVertically
++                    ) {
++                        Icon(
++                            imageVector = Icons.Default.Badge,
++                            contentDescription = "ID",
++                            tint = PurpleMid,
++                            modifier = Modifier.size(24.dp)
++                        )
++                        Spacer(modifier = Modifier.width(12.dp))
++                        Column {
++                            Text(
++                                text = "ID Estudiante",
++                                style = MaterialTheme.typography.labelMedium,
++                                color = Color.Gray
++                            )
++                            Text(
++                                text = student.studentCode,
++                                style = MaterialTheme.typography.bodyLarge,
++                                fontWeight = FontWeight.Bold,
++                                color = MaterialTheme.colorScheme.onSurface
++                            )
++                        }
++                    }
++
++                    Spacer(modifier = Modifier.height(14.dp))
++
++                    // Fila Correo Electrónico
++                    Row(
++                        modifier = Modifier.fillMaxWidth(),
++                        verticalAlignment = Alignment.CenterVertically
++                    ) {
++                        Icon(
++                            imageVector = Icons.Default.Email,
++                            contentDescription = "Correo",
++                            tint = PurpleMid,
++                            modifier = Modifier.size(24.dp)
++                        )
++                        Spacer(modifier = Modifier.width(12.dp))
++                        Column {
++                            Text(
++                                text = "Correo Electrónico",
++                                style = MaterialTheme.typography.labelMedium,
++                                color = Color.Gray
++                            )
++                            Text(
++                                text = student.email,
++                                style = MaterialTheme.typography.bodyLarge,
++                                fontWeight = FontWeight.Bold,
++                                color = MaterialTheme.colorScheme.onSurface
++                            )
++                        }
++                    }
++
++                    Spacer(modifier = Modifier.height(14.dp))
++
++                    // Fila Facultad
++                    Row(
++                        modifier = Modifier.fillMaxWidth(),
++                        verticalAlignment = Alignment.CenterVertically
++                    ) {
++                        Icon(
++                            imageVector = Icons.Default.School,
++                            contentDescription = "Facultad",
++                            tint = PurpleMid,
++                            modifier = Modifier.size(24.dp)
++                        )
++                        Spacer(modifier = Modifier.width(12.dp))
++                        Column {
++                            Text(
++                                text = "Facultad",
++                                style = MaterialTheme.typography.labelMedium,
++                                color = Color.Gray
++                            )
++                            Text(
++                                text = student.faculty,
++                                style = MaterialTheme.typography.bodyLarge,
++                                fontWeight = FontWeight.Bold,
++                                color = MaterialTheme.colorScheme.onSurface
++                            )
++                        }
++                    }
++
++                    Spacer(modifier = Modifier.height(16.dp))
++
++                    HorizontalDivider(color = Color.LightGray.copy(alpha = 0.6f))
++
++                    Spacer(modifier = Modifier.height(16.dp))
++
++                    // Biografía del estudiante
+                     Text(
+-                        text = "Este valor llegó como argumento tipado Int desde el NavHost.",
+-                        style = MaterialTheme.typography.bodySmall
++                        text = "Biografía",
++                        style = MaterialTheme.typography.titleMedium,
++                        fontWeight = FontWeight.Bold,
++                        color = PurpleMid
++                    )
++
++                    Spacer(modifier = Modifier.height(6.dp))
++
++                    Text(
++                        text = student.bio,
++                        style = MaterialTheme.typography.bodyMedium,
++                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                     )
+                 }
+             }
++
++            Spacer(modifier = Modifier.height(32.dp))
+         }
+     }
+-}
+\ No newline at end of file
++}
+Index: app/src/main/java/com/tuapp/navlab/screens/ListScreen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.tuapp.navlab.screens\r\n\r\nimport androidx.compose.foundation.clickable\r\nimport androidx.compose.foundation.lazy.LazyColumn\r\nimport androidx.compose.material3.ExperimentalMaterial3Api\r\nimport androidx.compose.material3.HorizontalDivider\r\nimport androidx.compose.material3.ListItem\r\nimport androidx.compose.material3.Scaffold\r\nimport androidx.compose.material3.Text\r\nimport androidx.compose.material3.TextButton\r\nimport androidx.compose.material3.TopAppBar\r\nimport androidx.compose.runtime.Composable\r\nimport androidx.compose.ui.Modifier\r\nimport androidx.navigation.NavController\r\nimport com.tuapp.navlab.navigation.Screen\r\n\r\n@kotlin.OptIn(ExperimentalMaterial3Api::class)\r\n@Composable\r\nfun ListScreen(navController: NavController) {\r\n    // Generación de lista de 8 elementos\r\n    val items = (1..8).map { \"Elemento numero $it\" }\r\n\r\n    Scaffold(\r\n        topBar = {\r\n            TopAppBar(\r\n                title = { Text(\"Lista\") },\r\n                navigationIcon = {\r\n                    TextButton(onClick = { navController.popBackStack() }) {\r\n                        Text(\"< Volver\")\r\n                    }\r\n                }\r\n            )\r\n        }\r\n    ) { padding ->\r\n        // Renderizado optimizado mediante LazyColumn\r\n        LazyColumn(contentPadding = padding) {\r\n            items(count = items.size) { index ->\r\n                ListItem(\r\n                    headlineContent = { Text(items[index]) },\r\n                    supportingContent = { Text(\"Toca para ver el detalle\") },\r\n                    modifier = Modifier.clickable {\r\n                        // Navegación enviando el ID correlativo\r\n                        navController.navigate(Screen.Detail.createRoute(itemId = index + 1))\r\n                    }\r\n                )\r\n                HorizontalDivider()\r\n            }\r\n        }\r\n    }\r\n}\r\n
+===================================================================
+diff --git a/app/src/main/java/com/tuapp/navlab/screens/ListScreen.kt b/app/src/main/java/com/tuapp/navlab/screens/ListScreen.kt
+--- a/app/src/main/java/com/tuapp/navlab/screens/ListScreen.kt	(revision dd993aa3afae89a90aa9892ab9de0f68b56f734a)
++++ b/app/src/main/java/com/tuapp/navlab/screens/ListScreen.kt	(date 1790174923199)
+@@ -1,49 +1,139 @@
+ package com.tuapp.navlab.screens
+ 
++import androidx.compose.foundation.BorderStroke
++import androidx.compose.foundation.background
++import androidx.compose.foundation.border
+ import androidx.compose.foundation.clickable
++import androidx.compose.foundation.layout.*
+ import androidx.compose.foundation.lazy.LazyColumn
+-import androidx.compose.material3.ExperimentalMaterial3Api
+-import androidx.compose.material3.HorizontalDivider
+-import androidx.compose.material3.ListItem
+-import androidx.compose.material3.Scaffold
+-import androidx.compose.material3.Text
+-import androidx.compose.material3.TextButton
+-import androidx.compose.material3.TopAppBar
++import androidx.compose.foundation.lazy.items
++import androidx.compose.foundation.shape.CircleShape
++import androidx.compose.foundation.shape.RoundedCornerShape
++import androidx.compose.material.icons.Icons
++import androidx.compose.material.icons.automirrored.filled.ArrowBack
++import androidx.compose.material.icons.filled.ChevronRight
++import androidx.compose.material3.*
+ import androidx.compose.runtime.Composable
++import androidx.compose.ui.Alignment
+ import androidx.compose.ui.Modifier
++import androidx.compose.ui.draw.clip
++import androidx.compose.ui.graphics.Color
++import androidx.compose.ui.layout.ContentScale
++import androidx.compose.ui.text.font.FontWeight
++import androidx.compose.ui.unit.dp
+ import androidx.navigation.NavController
++import coil.compose.AsyncImage
++import com.tuapp.navlab.model.StudentRepository
+ import com.tuapp.navlab.navigation.Screen
++import com.tuapp.navlab.ui.theme.BackgroundLilac
++import com.tuapp.navlab.ui.theme.CardGray
++import com.tuapp.navlab.ui.theme.PurpleLight
++import com.tuapp.navlab.ui.theme.PurpleMid
+ 
+-@kotlin.OptIn(ExperimentalMaterial3Api::class)
++@OptIn(ExperimentalMaterial3Api::class)
+ @Composable
+ fun ListScreen(navController: NavController) {
+-    // Generación de lista de 8 elementos
+-    val items = (1..8).map { "Elemento numero $it" }
+-
+     Scaffold(
+         topBar = {
+             TopAppBar(
+-                title = { Text("Lista") },
++                title = { Text("Directorio de Alumnos", color = Color.White) },
+                 navigationIcon = {
+-                    TextButton(onClick = { navController.popBackStack() }) {
+-                        Text("< Volver")
++                    IconButton(onClick = { navController.popBackStack() }) {
++                        Icon(
++                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
++                            contentDescription = "Volver",
++                            tint = Color.White
++                        )
+                     }
+-                }
+-            )
+-        }
+-    ) { padding ->
+-        // Renderizado optimizado mediante LazyColumn
+-        LazyColumn(contentPadding = padding) {
+-            items(count = items.size) { index ->
+-                ListItem(
+-                    headlineContent = { Text(items[index]) },
+-                    supportingContent = { Text("Toca para ver el detalle") },
+-                    modifier = Modifier.clickable {
+-                        // Navegación enviando el ID correlativo
+-                        navController.navigate(Screen.Detail.createRoute(itemId = index + 1))
+-                    }
+-                )
+-                HorizontalDivider()
++                },
++                colors = TopAppBarDefaults.topAppBarColors(containerColor = PurpleMid)
++            )
++        },
++        containerColor = BackgroundLilac
++    ) { paddingValues ->
++        // LazyColumn optimizada que renderiza la lista de estudiantes
++        LazyColumn(
++            modifier = Modifier
++                .fillMaxSize()
++                .padding(paddingValues),
++            contentPadding = PaddingValues(vertical = 12.dp)
++        ) {
++            items(StudentRepository.students) { student ->
++                Card(
++                    modifier = Modifier
++                        .fillMaxWidth()
++                        .padding(horizontal = 16.dp, vertical = 6.dp)
++                        .clickable {
++                            // Navega al detalle del estudiante pasando su ID como argumento
++                            navController.navigate(Screen.Detail.createRoute(student.id))
++                        },
++                    shape = RoundedCornerShape(16.dp),
++                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
++                    colors = CardDefaults.cardColors(containerColor = CardGray)
++                ) {
++                    Row(
++                        modifier = Modifier
++                            .fillMaxWidth(),
++                        verticalAlignment = Alignment.CenterVertically
++                    ) {
++                        // Barra vertical decorativa en el borde izquierdo de color PurpleMid
++                        Box(
++                            modifier = Modifier
++                                .width(6.dp)
++                                .height(76.dp)
++                                .background(PurpleMid)
++                        )
++
++                        Row(
++                            modifier = Modifier
++                                .fillMaxWidth()
++                                .padding(16.dp),
++                            verticalAlignment = Alignment.CenterVertically
++                        ) {
++                            // Avatar circular con contorno delgado (AsyncImage)
++                            Box(
++                                modifier = Modifier
++                                    .size(48.dp)
++                                    .border(BorderStroke(1.5.dp, PurpleLight), CircleShape)
++                                    .clip(CircleShape),
++                                contentAlignment = Alignment.Center
++                            ) {
++                                AsyncImage(
++                                    model = student.avatarUrl,
++                                    contentDescription = student.name,
++                                    modifier = Modifier.fillMaxSize(),
++                                    contentScale = ContentScale.Crop
++                                )
++                            }
++
++                            Spacer(modifier = Modifier.width(16.dp))
++
++                            // Nombre y carrera del estudiante
++                            Column(modifier = Modifier.weight(1f)) {
++                                Text(
++                                    text = student.name,
++                                    style = MaterialTheme.typography.titleMedium,
++                                    fontWeight = FontWeight.Bold,
++                                    color = MaterialTheme.colorScheme.onSurface
++                                )
++                                Spacer(modifier = Modifier.height(2.dp))
++                                Text(
++                                    text = student.career,
++                                    style = MaterialTheme.typography.bodyMedium,
++                                    color = PurpleMid,
++                                    fontWeight = FontWeight.SemiBold
++                                )
++                            }
++
++                            // Flecha de navegación
++                            Icon(
++                                imageVector = Icons.Default.ChevronRight,
++                                contentDescription = "Ver detalle",
++                                tint = PurpleMid
++                            )
++                        }
++                    }
++                }
+             }
+         }
+     }
+Index: app/src/main/java/com/tuapp/navlab/screens/ProfileScreen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.tuapp.navlab.screens\r\n\r\nimport androidx.compose.foundation.layout.*\r\nimport androidx.compose.material3.*\r\nimport androidx.compose.runtime.Composable\r\nimport androidx.compose.ui.Alignment\r\nimport androidx.compose.ui.Modifier\r\nimport androidx.compose.ui.unit.dp\r\nimport androidx.navigation.NavController\r\nimport com.tuapp.navlab.navigation.Screen\r\n\r\n@Composable\r\nfun ProfileScreen(navController: NavController) {\r\n    Column(\r\n        modifier = Modifier\r\n            .fillMaxSize()\r\n            .padding(24.dp),\r\n        horizontalAlignment = Alignment.CenterHorizontally,\r\n        verticalArrangement = Arrangement.Center\r\n    ) {\r\n        Text(\r\n            text = \"Mi Perfil\",\r\n            style = MaterialTheme.typography.headlineMedium\r\n        )\r\n\r\n        Spacer(modifier = Modifier.height(8.dp))\r\n\r\n        Text(\r\n            text = \"Sheila Aguirre\",\r\n            style = MaterialTheme.typography.bodyLarge\r\n        )\r\n\r\n        Spacer(modifier = Modifier.height(32.dp))\r\n\r\n        Button(\r\n            onClick = {\r\n                navController.navigate(Screen.Home.route) {\r\n                    popUpTo(Screen.Home.route) { inclusive = true }\r\n                }\r\n            },\r\n            modifier = Modifier.fillMaxWidth()\r\n        ) {\r\n            Text(\"Ir al inicio\")\r\n        }\r\n    }\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/tuapp/navlab/screens/ProfileScreen.kt b/app/src/main/java/com/tuapp/navlab/screens/ProfileScreen.kt
+--- a/app/src/main/java/com/tuapp/navlab/screens/ProfileScreen.kt	(revision dd993aa3afae89a90aa9892ab9de0f68b56f734a)
++++ b/app/src/main/java/com/tuapp/navlab/screens/ProfileScreen.kt	(date 1790174959990)
+@@ -1,46 +1,239 @@
+ package com.tuapp.navlab.screens
+ 
++import androidx.compose.foundation.BorderStroke
++import androidx.compose.foundation.background
++import androidx.compose.foundation.border
++import androidx.compose.foundation.clickable
+ import androidx.compose.foundation.layout.*
++import androidx.compose.foundation.rememberScrollState
++import androidx.compose.foundation.shape.CircleShape
++import androidx.compose.foundation.shape.RoundedCornerShape
++import androidx.compose.foundation.verticalScroll
++import androidx.compose.material.icons.Icons
++import androidx.compose.material.icons.automirrored.filled.ArrowBack
++import androidx.compose.material.icons.automirrored.filled.ExitToApp
+ import androidx.compose.material3.*
+ import androidx.compose.runtime.Composable
+ import androidx.compose.ui.Alignment
+ import androidx.compose.ui.Modifier
++import androidx.compose.ui.draw.clip
++import androidx.compose.ui.graphics.Brush
++import androidx.compose.ui.graphics.Color
++import androidx.compose.ui.layout.ContentScale
++import androidx.compose.ui.text.font.FontWeight
+ import androidx.compose.ui.unit.dp
+ import androidx.navigation.NavController
++import coil.compose.AsyncImage
+ import com.tuapp.navlab.navigation.Screen
++import com.tuapp.navlab.ui.theme.*
+ 
++@OptIn(ExperimentalMaterial3Api::class)
+ @Composable
+ fun ProfileScreen(navController: NavController) {
+-    Column(
+-        modifier = Modifier
+-            .fillMaxSize()
+-            .padding(24.dp),
+-        horizontalAlignment = Alignment.CenterHorizontally,
+-        verticalArrangement = Arrangement.Center
+-    ) {
+-        Text(
+-            text = "Mi Perfil",
+-            style = MaterialTheme.typography.headlineMedium
+-        )
++    Scaffold(
++        topBar = {
++            TopAppBar(
++                title = { Text("Configuración de Perfil", color = Color.White) },
++                navigationIcon = {
++                    IconButton(onClick = { navController.popBackStack() }) {
++                        Icon(
++                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
++                            contentDescription = "Volver",
++                            tint = Color.White
++                        )
++                    }
++                },
++                colors = TopAppBarDefaults.topAppBarColors(containerColor = PurpleMid)
++            )
++        }
++    ) { paddingValues ->
++        // Contenedor principal con fondo en degradado suave lila a blanco
++        Box(
++            modifier = Modifier
++                .fillMaxSize()
++                .padding(paddingValues)
++                .background(Brush.verticalGradient(listOf(BackgroundLilac, Color.White)))
++        ) {
++            Column(
++                modifier = Modifier
++                    .fillMaxSize()
++                    .verticalScroll(rememberScrollState()),
++                horizontalAlignment = Alignment.CenterHorizontally
++            ) {
++                // Header superior con BrandGradient y esquinas redondeadas
++                Box(
++                    modifier = Modifier
++                        .fillMaxWidth()
++                        .height(210.dp)
++                        .background(
++                            brush = BrandGradient,
++                            shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
++                        ),
++                    contentAlignment = Alignment.Center
++                ) {
++                    Column(
++                        horizontalAlignment = Alignment.CenterHorizontally,
++                        modifier = Modifier.padding(bottom = 16.dp)
++                    ) {
++                        // Avatar circular con SHEILA_AVATAR_URL y borde brillante de 4.dp en tono PurpleLight
++                        Box(
++                            modifier = Modifier
++                                .size(88.dp)
++                                .border(BorderStroke(4.dp, PurpleLight), CircleShape)
++                                .clip(CircleShape),
++                            contentAlignment = Alignment.Center
++                        ) {
++                            AsyncImage(
++                                model = SHEILA_AVATAR_URL,
++                                contentDescription = "Sheila Aguirre",
++                                modifier = Modifier.fillMaxSize(),
++                                contentScale = ContentScale.Crop
++                            )
++                        }
+ 
+-        Spacer(modifier = Modifier.height(8.dp))
++                        Spacer(modifier = Modifier.height(8.dp))
+ 
+-        Text(
+-            text = "Sheila Aguirre",
+-            style = MaterialTheme.typography.bodyLarge
+-        )
++                        // Nombre de la usuaria en blanco y bold
++                        Text(
++                            text = "Sheila Aguirre",
++                            style = MaterialTheme.typography.titleLarge,
++                            fontWeight = FontWeight.Bold,
++                            color = Color.White
++                        )
++
++                        Spacer(modifier = Modifier.height(2.dp))
++
++                        // Indicador de estado en verde brillante
++                        Text(
++                            text = "● Conectada al Portal",
++                            style = MaterialTheme.typography.bodySmall,
++                            fontWeight = FontWeight.SemiBold,
++                            color = Color(0xFF4CAF50)
++                        )
++                    }
++                }
++
++                Spacer(modifier = Modifier.height(20.dp))
++
++                // Contenido del perfil en secciones
++                Column(
++                    modifier = Modifier
++                        .fillMaxWidth()
++                        .padding(horizontal = 20.dp)
++                ) {
++                    // Sección INFORMACIÓN PERSONAL
++                    Text(
++                        text = "INFORMACIÓN PERSONAL",
++                        style = MaterialTheme.typography.labelMedium,
++                        fontWeight = FontWeight.Bold,
++                        color = PurpleMid,
++                        modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
++                    )
++
++                    // Card Surface blanca flotante (elevation = 3.dp, sin líneas divisorias)
++                    Surface(
++                        modifier = Modifier.fillMaxWidth(),
++                        color = Color.White,
++                        shape = RoundedCornerShape(16.dp),
++                        shadowElevation = 3.dp
++                    ) {
++                        Column(
++                            modifier = Modifier.padding(16.dp)
++                        ) {
++                            ProfileInfoRow(label = "Nombre Completo", value = "Sheila Aguirre")
++                            Spacer(modifier = Modifier.height(14.dp))
++                            ProfileInfoRow(label = "Correo", value = "sheila.aguirre@tecsup.edu.pe")
++                            Spacer(modifier = Modifier.height(14.dp))
++                            ProfileInfoRow(label = "Teléfono", value = "993 995 753")
++                        }
++                    }
++
++                    Spacer(modifier = Modifier.height(24.dp))
++
++                    // Sección ACADÉMICO
++                    Text(
++                        text = "ACADÉMICO",
++                        style = MaterialTheme.typography.labelMedium,
++                        fontWeight = FontWeight.Bold,
++                        color = PurpleMid,
++                        modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
++                    )
++
++                    // Card Surface blanca flotante (elevation = 3.dp, sin líneas divisorias)
++                    Surface(
++                        modifier = Modifier.fillMaxWidth(),
++                        color = Color.White,
++                        shape = RoundedCornerShape(16.dp),
++                        shadowElevation = 3.dp
++                    ) {
++                        Column(
++                            modifier = Modifier.padding(16.dp)
++                        ) {
++                            ProfileInfoRow(label = "Carrera", value = "Diseño y Desarrollo de Software")
++                            Spacer(modifier = Modifier.height(14.dp))
++                            ProfileInfoRow(label = "Ciclo Actual", value = "VI Ciclo")
++                        }
++                    }
++
++                    Spacer(modifier = Modifier.height(28.dp))
++
++                    // Botón Cerrar Sesión con borde rojo y fondo tintado
++                    Surface(
++                        modifier = Modifier
++                            .fillMaxWidth()
++                            .height(52.dp)
++                            .clickable {
++                                navController.navigate(Screen.Login.route) {
++                                    popUpTo(0) { inclusive = true }
++                                }
++                            },
++                        shape = RoundedCornerShape(12.dp),
++                        color = ErrorRed.copy(alpha = 0.08f),
++                        border = BorderStroke(1.5.dp, ErrorRed)
++                    ) {
++                        Row(
++                            modifier = Modifier
++                                .fillMaxSize()
++                                .padding(horizontal = 16.dp),
++                            verticalAlignment = Alignment.CenterVertically,
++                            horizontalArrangement = Arrangement.Center
++                        ) {
++                            Icon(
++                                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
++                                contentDescription = "Cerrar Sesión",
++                                tint = ErrorRed
++                            )
++                            Spacer(modifier = Modifier.width(10.dp))
++                            Text(
++                                text = "Cerrar Sesión",
++                                style = MaterialTheme.typography.bodyLarge,
++                                fontWeight = FontWeight.Bold,
++                                color = ErrorRed
++                            )
++                        }
++                    }
+ 
+-        Spacer(modifier = Modifier.height(32.dp))
+-
+-        Button(
+-            onClick = {
+-                navController.navigate(Screen.Home.route) {
+-                    popUpTo(Screen.Home.route) { inclusive = true }
++                    Spacer(modifier = Modifier.height(32.dp))
+                 }
+-            },
+-            modifier = Modifier.fillMaxWidth()
+-        ) {
+-            Text("Ir al inicio")
++            }
+         }
+     }
+-}
+\ No newline at end of file
++}
++
++@Composable
++fun ProfileInfoRow(label: String, value: String) {
++    Column {
++        Text(
++            text = label,
++            style = MaterialTheme.typography.labelMedium,
++            color = Color.Gray
++        )
++        Spacer(modifier = Modifier.height(2.dp))
++        Text(
++            text = value,
++            style = MaterialTheme.typography.bodyLarge,
++            fontWeight = FontWeight.SemiBold,
++            color = MaterialTheme.colorScheme.onSurface
++        )
++    }
++}
+Index: app/src/main/java/com/tuapp/navlab/navigation/AppNavigation.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.tuapp.navlab.navigation\r\n\r\nimport androidx.compose.runtime.Composable\r\nimport androidx.navigation.NavType\r\nimport androidx.navigation.compose.NavHost\r\nimport androidx.navigation.compose.composable\r\nimport androidx.navigation.compose.rememberNavController\r\nimport androidx.navigation.navArgument\r\nimport com.tuapp.navlab.screens.*\r\n\r\n@Composable\r\nfun AppNavigation() {\r\n    // Inicialización del gestor de estados de navegación\r\n    val navController = rememberNavController()\r\n\r\n    NavHost(\r\n        navController = navController,\r\n        // Define la pantalla inicial al abrir la aplicación\r\n        startDestination = Screen.Home.route\r\n    ) {\r\n        // Mapeo hacia el composable HomeScreen\r\n        composable(Screen.Home.route) {\r\n            HomeScreen(navController)\r\n        }\r\n\r\n        // Mapeo hacia el composable ListScreen\r\n        composable(Screen.List.route) {\r\n            ListScreen(navController)\r\n        }\r\n\r\n        // Mapeo hacia el composable ProfileScreen\r\n        composable(Screen.Profile.route) {\r\n            ProfileScreen(navController)\r\n        }\r\n\r\n        // Mapeo con recepción de argumento de tipo entero\r\n        composable(\r\n            route = Screen.Detail.route,\r\n            arguments = listOf(\r\n                navArgument(name = \"itemId\") {\r\n                    type = NavType.IntType\r\n                    defaultValue = 0\r\n                }\r\n            )\r\n        ) { backStackEntry ->\r\n            // Recupera el ID enviado o asigna valor por defecto\r\n            val itemId = backStackEntry.arguments?.getInt(\"itemId\") ?: 0\r\n            DetailScreen(navController, itemId)\r\n        }\r\n    }\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/tuapp/navlab/navigation/AppNavigation.kt b/app/src/main/java/com/tuapp/navlab/navigation/AppNavigation.kt
+--- a/app/src/main/java/com/tuapp/navlab/navigation/AppNavigation.kt	(revision dd993aa3afae89a90aa9892ab9de0f68b56f734a)
++++ b/app/src/main/java/com/tuapp/navlab/navigation/AppNavigation.kt	(date 1790175400915)
+@@ -10,42 +10,19 @@
+ 
+ @Composable
+ fun AppNavigation() {
+-    // Inicialización del gestor de estados de navegación
+     val navController = rememberNavController()
+ 
+-    NavHost(
+-        navController = navController,
+-        // Define la pantalla inicial al abrir la aplicación
+-        startDestination = Screen.Home.route
+-    ) {
+-        // Mapeo hacia el composable HomeScreen
+-        composable(Screen.Home.route) {
+-            HomeScreen(navController)
+-        }
+-
+-        // Mapeo hacia el composable ListScreen
+-        composable(Screen.List.route) {
+-            ListScreen(navController)
+-        }
+-
+-        // Mapeo hacia el composable ProfileScreen
+-        composable(Screen.Profile.route) {
+-            ProfileScreen(navController)
+-        }
+-
+-        // Mapeo con recepción de argumento de tipo entero
++    NavHost(navController = navController, startDestination = Screen.Login.route) {
++        composable(Screen.Login.route) { LoginScreen(navController) }
++        composable(Screen.Home.route) { HomeScreen(navController) }
++        composable(Screen.List.route) { ListScreen(navController) }
++        composable(Screen.Profile.route) { ProfileScreen(navController) }
+         composable(
+             route = Screen.Detail.route,
+-            arguments = listOf(
+-                navArgument(name = "itemId") {
+-                    type = NavType.IntType
+-                    defaultValue = 0
+-                }
+-            )
++            arguments = listOf(navArgument("studentId") { type = NavType.IntType; defaultValue = 1 })
+         ) { backStackEntry ->
+-            // Recupera el ID enviado o asigna valor por defecto
+-            val itemId = backStackEntry.arguments?.getInt("itemId") ?: 0
+-            DetailScreen(navController, itemId)
++            val id = backStackEntry.arguments?.getInt("studentId") ?: 1
++            DetailScreen(navController, id)
+         }
+     }
+ }
+\ No newline at end of file
+Index: app/src/main/java/com/tuapp/navlab/navigation/Screen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.tuapp.navlab.navigation\r\n\r\nsealed class Screen(val route: String) {\r\n    // pantalla incial\r\n    object Home : Screen(route = \"home\")\r\n\r\n    // lista d elementos\r\n    object List : Screen(route = \"list\")\r\n\r\n    // usuario\r\n    object Profile : Screen(route = \"profile\")\r\n    object Detail : Screen(route = \"detail/{itemId}\") {\r\n        fun createRoute(itemId: Int): String = \"detail/$itemId\"\r\n    }\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/tuapp/navlab/navigation/Screen.kt b/app/src/main/java/com/tuapp/navlab/navigation/Screen.kt
+--- a/app/src/main/java/com/tuapp/navlab/navigation/Screen.kt	(revision dd993aa3afae89a90aa9892ab9de0f68b56f734a)
++++ b/app/src/main/java/com/tuapp/navlab/navigation/Screen.kt	(date 1790172806496)
+@@ -1,14 +1,19 @@
+ package com.tuapp.navlab.navigation
+ 
+ sealed class Screen(val route: String) {
+-    // pantalla incial
++    // Pantalla de inicio de sesión
++    object Login : Screen(route = "login")
++
++    // Pantalla inicial principal (Home)
+     object Home : Screen(route = "home")
+ 
+-    // lista d elementos
++    // Lista de elementos (Directorio)
+     object List : Screen(route = "list")
+ 
+-    // usuario
++    // Perfil de usuario
+     object Profile : Screen(route = "profile")
++
++    // Detalle de estudiante con parámetro itemId
+     object Detail : Screen(route = "detail/{itemId}") {
+         fun createRoute(itemId: Int): String = "detail/$itemId"
+     }
+Index: app/src/main/java/com/tuapp/navlab/screens/HomeScreen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.tuapp.navlab.screens\r\n\r\nimport androidx.compose.foundation.layout.*\r\nimport androidx.compose.material3.*\r\nimport androidx.compose.runtime.Composable\r\nimport androidx.compose.ui.Alignment\r\nimport androidx.compose.ui.Modifier\r\nimport androidx.compose.ui.unit.dp\r\nimport androidx.navigation.NavController\r\nimport com.tuapp.navlab.navigation.Screen\r\n\r\n@Composable\r\nfun HomeScreen(navController: NavController) {\r\n    Column(\r\n        modifier = Modifier\r\n            .fillMaxSize()\r\n            .padding(24.dp),\r\n        horizontalAlignment = Alignment.CenterHorizontally,\r\n        verticalArrangement = Arrangement.Center\r\n    ) {\r\n        Text(\r\n            text = \"Pantalla Tecsup\",\r\n            style = MaterialTheme.typography.headlineMedium\r\n        )\r\n\r\n        Spacer(modifier = Modifier.height(32.dp))\r\n\r\n        Button(\r\n            onClick = { navController.navigate(Screen.List.route) },\r\n            modifier = Modifier.fillMaxWidth()\r\n        ) {\r\n            Text(\"Ver lista de elementos\")\r\n        }\r\n\r\n        Spacer(modifier = Modifier.height(8.dp))\r\n\r\n        OutlinedButton(\r\n            onClick = { navController.navigate(Screen.Profile.route) },\r\n            modifier = Modifier.fillMaxWidth()\r\n        ) {\r\n            Text(\"Mi perfil\")\r\n        }\r\n    }\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/tuapp/navlab/screens/HomeScreen.kt b/app/src/main/java/com/tuapp/navlab/screens/HomeScreen.kt
+--- a/app/src/main/java/com/tuapp/navlab/screens/HomeScreen.kt	(revision dd993aa3afae89a90aa9892ab9de0f68b56f734a)
++++ b/app/src/main/java/com/tuapp/navlab/screens/HomeScreen.kt	(date 1790175367785)
+@@ -1,44 +1,0 @@
+-package com.tuapp.navlab.screens
+-
+-import androidx.compose.foundation.layout.*
+-import androidx.compose.material3.*
+-import androidx.compose.runtime.Composable
+-import androidx.compose.ui.Alignment
+-import androidx.compose.ui.Modifier
+-import androidx.compose.ui.unit.dp
+-import androidx.navigation.NavController
+-import com.tuapp.navlab.navigation.Screen
+-
+-@Composable
+-fun HomeScreen(navController: NavController) {
+-    Column(
+-        modifier = Modifier
+-            .fillMaxSize()
+-            .padding(24.dp),
+-        horizontalAlignment = Alignment.CenterHorizontally,
+-        verticalArrangement = Arrangement.Center
+-    ) {
+-        Text(
+-            text = "Pantalla Tecsup",
+-            style = MaterialTheme.typography.headlineMedium
+-        )
+-
+-        Spacer(modifier = Modifier.height(32.dp))
+-
+-        Button(
+-            onClick = { navController.navigate(Screen.List.route) },
+-            modifier = Modifier.fillMaxWidth()
+-        ) {
+-            Text("Ver lista de elementos")
+-        }
+-
+-        Spacer(modifier = Modifier.height(8.dp))
+-
+-        OutlinedButton(
+-            onClick = { navController.navigate(Screen.Profile.route) },
+-            modifier = Modifier.fillMaxWidth()
+-        ) {
+-            Text("Mi perfil")
+-        }
+-    }
+-}
+\ No newline at end of file
+Index: app/src/main/java/com/tuapp/navlab/screens/LoginScreen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.tuapp.navlab.screens\r\n\r\nimport androidx.compose.foundation.layout.*\r\nimport androidx.compose.material3.*\r\nimport androidx.compose.runtime.*\r\nimport androidx.compose.ui.Alignment\r\nimport androidx.compose.ui.Modifier\r\nimport androidx.compose.ui.text.input.PasswordVisualTransformation\r\nimport androidx.compose.ui.unit.dp\r\nimport androidx.navigation.NavController\r\nimport com.tuapp.navlab.navigation.Screen\r\n\r\n@Composable\r\nfun LoginScreen(navController: NavController) {\r\n    var username by remember { mutableStateOf(\"\") }\r\n    var password by remember { mutableStateOf(\"\") }\r\n\r\n    Box(\r\n        modifier = Modifier.fillMaxSize(),\r\n        contentAlignment = Alignment.Center\r\n    ) {\r\n        Card(\r\n            modifier = Modifier\r\n                .fillMaxWidth()\r\n                .padding(24.dp)\r\n        ) {\r\n            Column(\r\n                modifier = Modifier.padding(24.dp),\r\n                horizontalAlignment = Alignment.CenterHorizontally\r\n            ) {\r\n                Text(\r\n                    text = \"Iniciar Sesión\",\r\n                    style = MaterialTheme.typography.titleLarge\r\n                )\r\n\r\n                Spacer(modifier = Modifier.height(16.dp))\r\n\r\n                OutlinedTextField(\r\n                    value = username,\r\n                    onValueChange = { username = it },\r\n                    label = { Text(\"Usuario\") },\r\n                    modifier = Modifier.fillMaxWidth()\r\n                )\r\n\r\n                Spacer(modifier = Modifier.height(8.dp))\r\n\r\n                OutlinedTextField(\r\n                    value = password,\r\n                    onValueChange = { password = it },\r\n                    label = { Text(\"Contraseña\") },\r\n                    visualTransformation = PasswordVisualTransformation(),\r\n                    modifier = Modifier.fillMaxWidth()\r\n                )\r\n\r\n                Spacer(modifier = Modifier.height(20.dp))\r\n\r\n                Button(\r\n                    onClick = {\r\n                        // Navega hacia la pantalla Home\r\n                        navController.navigate(Screen.Home.route) {\r\n                            popUpTo(Screen.Home.route) { inclusive = true }\r\n                        }\r\n                    },\r\n                    modifier = Modifier.fillMaxWidth()\r\n                ) {\r\n                    Text(\"Ingresar\")\r\n                }\r\n            }\r\n        }\r\n    }\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/tuapp/navlab/screens/LoginScreen.kt b/app/src/main/java/com/tuapp/navlab/screens/LoginScreen.kt
+--- a/app/src/main/java/com/tuapp/navlab/screens/LoginScreen.kt	(revision dd993aa3afae89a90aa9892ab9de0f68b56f734a)
++++ b/app/src/main/java/com/tuapp/navlab/screens/LoginScreen.kt	(date 1790174892186)
+@@ -1,71 +1,162 @@
+ package com.tuapp.navlab.screens
+ 
++import androidx.compose.foundation.BorderStroke
++import androidx.compose.foundation.background
+ import androidx.compose.foundation.layout.*
++import androidx.compose.foundation.shape.CircleShape
++import androidx.compose.foundation.shape.RoundedCornerShape
++import androidx.compose.material.icons.Icons
++import androidx.compose.material.icons.filled.Email
++import androidx.compose.material.icons.filled.Lock
++import androidx.compose.material.icons.filled.School
++import androidx.compose.material.icons.filled.Visibility
++import androidx.compose.material.icons.filled.VisibilityOff
+ import androidx.compose.material3.*
+ import androidx.compose.runtime.*
+ import androidx.compose.ui.Alignment
+ import androidx.compose.ui.Modifier
++import androidx.compose.ui.graphics.Color
++import androidx.compose.ui.text.font.FontWeight
+ import androidx.compose.ui.text.input.PasswordVisualTransformation
++import androidx.compose.ui.text.input.VisualTransformation
+ import androidx.compose.ui.unit.dp
++import androidx.compose.ui.unit.sp
+ import androidx.navigation.NavController
+ import com.tuapp.navlab.navigation.Screen
++import com.tuapp.navlab.ui.theme.BackgroundLilac
++import com.tuapp.navlab.ui.theme.PurpleDark
++import com.tuapp.navlab.ui.theme.PurpleLight
++import com.tuapp.navlab.ui.theme.PurpleMid
+ 
+ @Composable
+ fun LoginScreen(navController: NavController) {
+-    var username by remember { mutableStateOf("") }
++    var email by remember { mutableStateOf("") }
+     var password by remember { mutableStateOf("") }
++    var passwordVisible by remember { mutableStateOf(false) }
+ 
++    // Fondo general BackgroundLilac y contenido centrado verticalmente
+     Box(
+-        modifier = Modifier.fillMaxSize(),
++        modifier = Modifier
++            .fillMaxSize()
++            .background(BackgroundLilac),
+         contentAlignment = Alignment.Center
+     ) {
++        // Card blanca redondeada (24.dp) con elevación 8.dp y sutil borde exterior de 1.dp en color PurpleLight
+         Card(
+             modifier = Modifier
+                 .fillMaxWidth()
+-                .padding(24.dp)
++                .padding(24.dp),
++            shape = RoundedCornerShape(24.dp),
++            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
++            colors = CardDefaults.cardColors(containerColor = Color.White),
++            border = BorderStroke(1.dp, PurpleLight)
+         ) {
+             Column(
+                 modifier = Modifier.padding(24.dp),
+                 horizontalAlignment = Alignment.CenterHorizontally
+             ) {
++                // Insignia / Icono superior decorativo
++                Surface(
++                    modifier = Modifier.size(56.dp),
++                    shape = CircleShape,
++                    color = PurpleLight.copy(alpha = 0.3f)
++                ) {
++                    Box(contentAlignment = Alignment.Center) {
++                        Icon(
++                            imageVector = Icons.Default.School,
++                            contentDescription = "Logo",
++                            tint = PurpleMid,
++                            modifier = Modifier.size(28.dp)
++                        )
++                    }
++                }
++
++                Spacer(modifier = Modifier.height(16.dp))
++
++                // Título "Portal Académico" (bold, PurpleDark, 22.sp)
+                 Text(
+-                    text = "Iniciar Sesión",
+-                    style = MaterialTheme.typography.titleLarge
++                    text = "Portal Académico",
++                    style = MaterialTheme.typography.headlineSmall,
++                    fontSize = 22.sp,
++                    fontWeight = FontWeight.Bold,
++                    color = PurpleDark
+                 )
+ 
+-                Spacer(modifier = Modifier.height(16.dp))
++                Spacer(modifier = Modifier.height(4.dp))
++
++                // Subtítulo
++                Text(
++                    text = "Accede a tu cuenta",
++                    style = MaterialTheme.typography.bodyMedium,
++                    color = Color.Gray
++                )
+ 
++                Spacer(modifier = Modifier.height(24.dp))
++
++                // OutlinedTextField "Correo Institucional" con ícono de email
+                 OutlinedTextField(
+-                    value = username,
+-                    onValueChange = { username = it },
+-                    label = { Text("Usuario") },
+-                    modifier = Modifier.fillMaxWidth()
++                    value = email,
++                    onValueChange = { email = it },
++                    label = { Text("Correo Institucional") },
++                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email", tint = PurpleMid) },
++                    singleLine = true,
++                    modifier = Modifier.fillMaxWidth(),
++                    shape = RoundedCornerShape(12.dp)
+                 )
+ 
+-                Spacer(modifier = Modifier.height(8.dp))
++                Spacer(modifier = Modifier.height(16.dp))
+ 
++                // OutlinedTextField "Contraseña" con ícono de candado y "ojo" para mostrar/ocultar
+                 OutlinedTextField(
+                     value = password,
+                     onValueChange = { password = it },
+                     label = { Text("Contraseña") },
+-                    visualTransformation = PasswordVisualTransformation(),
+-                    modifier = Modifier.fillMaxWidth()
++                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Candado", tint = PurpleMid) },
++                    trailingIcon = {
++                        val image = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
++                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
++                            Icon(imageVector = image, contentDescription = "Toggle password visibility", tint = Color.Gray)
++                        }
++                    },
++                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
++                    singleLine = true,
++                    modifier = Modifier.fillMaxWidth(),
++                    shape = RoundedCornerShape(12.dp)
+                 )
+ 
+-                Spacer(modifier = Modifier.height(20.dp))
++                Spacer(modifier = Modifier.height(24.dp))
+ 
++                // Button morado vibrante (PurpleMid), fillMaxWidth, "INICIAR SESIÓN"
+                 Button(
+                     onClick = {
+-                        // Navega hacia la pantalla Home
+                         navController.navigate(Screen.Home.route) {
+-                            popUpTo(Screen.Home.route) { inclusive = true }
++                            popUpTo(Screen.Login.route) { inclusive = true }
+                         }
+                     },
+-                    modifier = Modifier.fillMaxWidth()
++                    modifier = Modifier
++                        .fillMaxWidth()
++                        .height(50.dp),
++                    colors = ButtonDefaults.buttonColors(containerColor = PurpleMid),
++                    shape = RoundedCornerShape(12.dp)
+                 ) {
+-                    Text("Ingresar")
++                    Text(
++                        text = "INICIAR SESIÓN",
++                        style = MaterialTheme.typography.bodyLarge,
++                        fontWeight = FontWeight.Bold,
++                        color = Color.White
++                    )
+                 }
++
++                Spacer(modifier = Modifier.height(8.dp))
++
++                // TextButton "¿Olvidaste tu contraseña?"
++                TextButton(onClick = { /* Acción simulada */ }) {
++                    Text(
++                        text = "¿Olvidaste tu contraseña?",
++                        color = PurpleMid
++                    )
++                }
+             }
+         }
+     }
+-}
+\ No newline at end of file
++}
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n    xmlns:tools=\"http://schemas.android.com/tools\">\r\n\r\n    <application\r\n        android:allowBackup=\"true\"\r\n        android:dataExtractionRules=\"@xml/data_extraction_rules\"\r\n        android:fullBackupContent=\"@xml/backup_rules\"\r\n        android:icon=\"@mipmap/ic_launcher\"\r\n        android:label=\"@string/app_name\"\r\n        android:roundIcon=\"@mipmap/ic_launcher_round\"\r\n        android:supportsRtl=\"true\"\r\n        android:theme=\"@style/Theme.NavLab\">\r\n        <activity\r\n            android:name=\".MainActivity\"\r\n            android:exported=\"true\"\r\n            android:label=\"@string/app_name\"\r\n            android:theme=\"@style/Theme.NavLab\"\r\n            android:windowSoftInputMode=\"adjustResize\">\r\n            <intent-filter>\r\n                <action android:name=\"android.intent.action.MAIN\" />\r\n\r\n                <category android:name=\"android.intent.category.LAUNCHER\" />\r\n            </intent-filter>\r\n        </activity>\r\n    </application>\r\n\r\n</manifest>
+===================================================================
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+--- a/app/src/main/AndroidManifest.xml	(revision dd993aa3afae89a90aa9892ab9de0f68b56f734a)
++++ b/app/src/main/AndroidManifest.xml	(date 1790172787248)
+@@ -2,6 +2,9 @@
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:tools="http://schemas.android.com/tools">
+ 
++    <!-- Permiso necesario para cargar avatares vía internet (Coil) -->
++    <uses-permission android:name="android.permission.INTERNET" />
++
+     <application
+         android:allowBackup="true"
+         android:dataExtractionRules="@xml/data_extraction_rules"

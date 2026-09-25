@@ -8,5 +8,6 @@ data class Doctor(
     val rating: Double,
     val reviewCount: Int,
     val experience: String,
-    val bio: String
+    val bio: String,
+    val isFavorite: Boolean = false
 )

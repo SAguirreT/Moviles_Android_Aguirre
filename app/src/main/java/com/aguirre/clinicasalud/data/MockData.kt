@@ -13,7 +13,8 @@ object MockData {
             rating = 4.9,
             reviewCount = 128,
             experience = "12 años exp.",
-            bio = "Especialista en arritmias e hipertensión, formación en la Clínica Mayo."
+            bio = "Especialista en arritmias e hipertensión, formación en la Clínica Mayo.",
+            isFavorite = true
         ),
         Doctor(
             id = 2,
@@ -22,7 +23,8 @@ object MockData {
             rating = 4.7,
             reviewCount = 95,
             experience = "8 años exp.",
-            bio = "Atención integral infantil y desarrollo pediátrico."
+            bio = "Atención integral infantil y desarrollo pediátrico.",
+            isFavorite = false
         ),
         Doctor(
             id = 3,
@@ -31,7 +33,8 @@ object MockData {
             rating = 4.8,
             reviewCount = 110,
             experience = "10 años exp.",
-            bio = "Especialista en dermatología clínica y estética."
+            bio = "Especialista en dermatología clínica y estética.",
+            isFavorite = true
         )
     )
 

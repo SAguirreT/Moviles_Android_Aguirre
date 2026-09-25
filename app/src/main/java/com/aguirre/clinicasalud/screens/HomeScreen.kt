@@ -34,9 +34,11 @@ fun HomeScreen(
     onOpenDrawer: () -> Unit,
     onDoctorClick: (Int) -> Unit
 ) {
-    // 📌 SUSTENTACIÓN: Control del estado de la especialidad seleccionada mediante remember y mutableStateOf
+    // 📌 SUSTENTACIÓN: Control de estados para filtrado dinámico de médicos
     var selectedSpecialty by remember { mutableStateOf("Cardiología") }
     var searchQuery by remember { mutableStateOf("") }
+    var showOnlyFavorites by remember { mutableStateOf(false) }
+    var doctorsList by remember { mutableStateOf(MockData.doctors) }
 
     Scaffold(
         topBar = {
@@ -80,13 +82,30 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 📌 SUSTENTACIÓN: LazyRow para implementar el listado horizontal de filtros
+            // 📌 SUSTENTACIÓN: LazyRow para implementar el listado horizontal de filtros (Favoritos + Especialidades)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                item {
+                    FilterChip(
+                        selected = showOnlyFavorites,
+                        onClick = { showOnlyFavorites = !showOnlyFavorites },
+                        label = { Text("❤️ Favoritos") },
+                        shape = RoundedCornerShape(20.dp),
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = PurpleChipUnselected,
+                            selectedContainerColor = PurpleChipSelected,
+                            labelColor = TextDark,
+                            selectedLabelColor = Color.White
+                        )
+                    )
+                }
+
                 items(MockData.specialties) { specialty ->
                     val isSelected = specialty == selectedSpecialty
                     FilterChip(
                         selected = isSelected,
-                        onClick = { selectedSpecialty = specialty },
+                        onClick = {
+                            selectedSpecialty = if (isSelected) "" else specialty
+                        },
                         label = { Text(specialty) },
                         shape = RoundedCornerShape(20.dp),
                         colors = FilterChipDefaults.filterChipColors(
@@ -105,15 +124,32 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            val filteredDoctors = MockData.doctors.filter { doctor ->
-                doctor.name.contains(searchQuery, ignoreCase = true) ||
-                doctor.specialty.contains(searchQuery, ignoreCase = true)
+            // 📌 SUSTENTACIÓN: Combinación de los 3 filtros: texto de búsqueda, especialidad seleccionada y solo favoritos
+            val filteredDoctors = doctorsList.filter { doctor ->
+                val matchesSearch = searchQuery.isBlank() ||
+                        doctor.name.contains(searchQuery, ignoreCase = true) ||
+                        doctor.specialty.contains(searchQuery, ignoreCase = true)
+
+                val matchesSpecialty = selectedSpecialty.isBlank() ||
+                        doctor.specialty.take(4).equals(selectedSpecialty.take(4), ignoreCase = true)
+
+                val matchesFavorite = !showOnlyFavorites || doctor.isFavorite
+
+                matchesSearch && matchesSpecialty && matchesFavorite
             }
 
             // 📌 SUSTENTACIÓN: LazyColumn para optimizar la carga vertical de médicos
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(filteredDoctors) { doctor ->
-                    DoctorCard(doctor = doctor, onClick = { onDoctorClick(doctor.id) })
+                    DoctorCard(
+                        doctor = doctor,
+                        onClick = { onDoctorClick(doctor.id) },
+                        onFavoriteToggle = {
+                            doctorsList = doctorsList.map { d ->
+                                if (d.id == doctor.id) d.copy(isFavorite = !d.isFavorite) else d
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -124,10 +160,8 @@ fun HomeScreen(
 fun DoctorCard(
     doctor: Doctor,
     onClick: () -> Unit,
-    onFavoriteToggle: ((Boolean) -> Unit)? = null
+    onFavoriteToggle: () -> Unit
 ) {
-    var isFavorite by remember(doctor.id) { mutableStateOf(doctor.isFavorite) }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -164,16 +198,11 @@ fun DoctorCard(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            IconButton(
-                onClick = {
-                    isFavorite = !isFavorite
-                    onFavoriteToggle?.invoke(isFavorite)
-                }
-            ) {
+            IconButton(onClick = onFavoriteToggle) {
                 Icon(
-                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    imageVector = if (doctor.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = "Favorito",
-                    tint = if (isFavorite) Color.Red else TextGray
+                    tint = if (doctor.isFavorite) Color.Red else TextGray
                 )
             }
         }

@@ -1,4 +1,4 @@
-package com.example.clinicasalud.navigation
+package com.aguirre.clinicasalud.navigation
 
 // 📌 SUSTENTACIÓN: Clase sellada para evitar errores al tipear nombres de rutas
 sealed class Screen(val route: String) {

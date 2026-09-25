@@ -1,8 +1,6 @@
-package com.example.clinicasalud.data
-
-import com.example.clinicasalud.model.Appointment
-import com.example.clinicasalud.model.Doctor
-
+package com.aguirre.clinicasalud.data
+import com.aguirre.clinicasalud.model.Appointment
+import com.aguirre.clinicasalud.model.Doctor
 // 📌 SUSTENTACIÓN: Singleton para simular la base de datos local de pruebas
 object MockData {
     val specialties = listOf("Cardiología", "Pediatría", "Dermatología", "Neurología")

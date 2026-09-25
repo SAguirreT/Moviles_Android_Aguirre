@@ -1,4 +1,4 @@
-package com.example.clinicasalud.model
+package com.aguirre.clinicasalud.model
 
 // 📌 SUSTENTACIÓN: Entidad de médicos inmutable
 data class Doctor(

@@ -1,4 +1,4 @@
-package com.example.clinicasalud.screens
+package com.aguirre.clinicasalud.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.clinicasalud.model.Appointment
+import com.aguirre.clinicasalud.model.Appointment
 import com.example.clinicasalud.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)

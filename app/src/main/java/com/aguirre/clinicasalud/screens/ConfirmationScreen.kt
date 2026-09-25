@@ -1,4 +1,4 @@
-package com.example.clinicasalud.screens
+package com.aguirre.clinicasalud.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

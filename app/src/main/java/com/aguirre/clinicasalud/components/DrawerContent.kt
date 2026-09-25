@@ -1,4 +1,4 @@
-package com.example.clinicasalud.components
+package com.aguirre.clinicasalud.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,7 +14,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.clinicasalud.ui.theme.*
+import com.aguirre.clinicasalud.ui.theme.*
+import com.example.clinicasalud.ui.theme.PurpleLight
+import com.example.clinicasalud.ui.theme.PurplePrimary
+import com.example.clinicasalud.ui.theme.TextDark
 
 @Composable
 fun DrawerContent(

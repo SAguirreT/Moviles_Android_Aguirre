@@ -1,4 +1,4 @@
-package com.example.clinicasalud.model
+package com.aguirre.clinicasalud.model
 
 // 📌 SUSTENTACIÓN: Modelo para las citas guardadas
 data class Appointment(

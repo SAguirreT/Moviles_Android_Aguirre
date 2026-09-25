@@ -1,4 +1,4 @@
-package com.example.clinicasalud.screens
+package com.aguirre.clinicasalud.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,8 +17,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.clinicasalud.data.MockData
-import com.example.clinicasalud.ui.theme.*
+import com.aguirre.clinicasalud.data.MockData
+import com.aguirre.clinicasalud.ui.theme.*
+import com.example.clinicasalud.ui.theme.PurpleLight
+import com.example.clinicasalud.ui.theme.PurplePrimary
+import com.example.clinicasalud.ui.theme.StarYellow
+import com.example.clinicasalud.ui.theme.TextDark
+import com.example.clinicasalud.ui.theme.TextGray
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

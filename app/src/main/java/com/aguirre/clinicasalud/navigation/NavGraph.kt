@@ -9,6 +9,9 @@ import com.aguirre.clinicasalud.components.DrawerContent
 import com.aguirre.clinicasalud.data.MockData
 import com.aguirre.clinicasalud.model.Appointment
 import com.aguirre.clinicasalud.screens.*
+import com.example.clinicasalud.screens.MedicalHistoryScreen
+import com.example.clinicasalud.screens.ProfileScreen
+import com.example.clinicasalud.screens.ScheduleAppointmentScreen
 import kotlinx.coroutines.launch
 
 @Composable

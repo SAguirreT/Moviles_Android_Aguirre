@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.clinicasalud.data.MockData
+import com.aguirre.clinicasalud.data.MockData
 import com.example.clinicasalud.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)

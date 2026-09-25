@@ -10,7 +10,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,6 +36,7 @@ fun HomeScreen(
 ) {
     // 📌 SUSTENTACIÓN: Control del estado de la especialidad seleccionada mediante remember y mutableStateOf
     var selectedSpecialty by remember { mutableStateOf("Cardiología") }
+    var searchQuery by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -58,6 +62,24 @@ fun HomeScreen(
                 .padding(padding) // 📌 SUSTENTACIÓN: Respetamos los márgenes asignados por Scaffold
                 .padding(16.dp)
         ) {
+            // 📌 SUSTENTACIÓN: Campo de búsqueda con estado mutable searchQuery
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("Buscar médico o especialidad...") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Buscar"
+                    )
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             // 📌 SUSTENTACIÓN: LazyRow para implementar el listado horizontal de filtros
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(MockData.specialties) { specialty ->
@@ -83,9 +105,14 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            val filteredDoctors = MockData.doctors.filter { doctor ->
+                doctor.name.contains(searchQuery, ignoreCase = true) ||
+                doctor.specialty.contains(searchQuery, ignoreCase = true)
+            }
+
             // 📌 SUSTENTACIÓN: LazyColumn para optimizar la carga vertical de médicos
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(MockData.doctors) { doctor ->
+                items(filteredDoctors) { doctor ->
                     DoctorCard(doctor = doctor, onClick = { onDoctorClick(doctor.id) })
                 }
             }
@@ -94,7 +121,13 @@ fun HomeScreen(
 }
 
 @Composable
-fun DoctorCard(doctor: Doctor, onClick: () -> Unit) {
+fun DoctorCard(
+    doctor: Doctor,
+    onClick: () -> Unit,
+    onFavoriteToggle: ((Boolean) -> Unit)? = null
+) {
+    var isFavorite by remember(doctor.id) { mutableStateOf(doctor.isFavorite) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -127,6 +160,21 @@ fun DoctorCard(doctor: Doctor, onClick: () -> Unit) {
                 Icon(Icons.Default.Star, contentDescription = null, tint = StarYellow, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(text = doctor.rating.toString(), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            IconButton(
+                onClick = {
+                    isFavorite = !isFavorite
+                    onFavoriteToggle?.invoke(isFavorite)
+                }
+            ) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = "Favorito",
+                    tint = if (isFavorite) Color.Red else TextGray
+                )
             }
         }
     }

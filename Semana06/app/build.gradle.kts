@@ -5,14 +5,12 @@ plugins {
 
 android {
     namespace = "com.tuapp.navlab"
-    compileSdk {
-        version = release(37)
-    }
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.tuapp.navlab"
         minSdk = 24
-        targetSdk = 37
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -21,9 +19,11 @@ android {
 
     buildTypes {
         release {
-            optimization {
-                enable = false
-            }
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {
@@ -44,6 +44,10 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+
+    // Navegación en Jetpack Compose
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -51,5 +55,4 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    implementation("androidx.navigation:navigation-compose:2.7.7")
 }

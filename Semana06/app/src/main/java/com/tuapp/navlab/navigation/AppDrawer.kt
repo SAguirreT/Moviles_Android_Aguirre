@@ -1,99 +1,88 @@
 package com.tuapp.navlab.navigation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-
-data class DrawerItem(
-    val ruta: String,
-    val titulo: String,
-    val icono: ImageVector
-)
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun AppDrawer(
-    rutaActual: String,
-    onNavegar: (String) -> Unit
+    currentRoute: String,
+    onNavegar: (String) -> Unit,
+    onCloseDrawer: () -> Unit
 ) {
-    val items = listOf(
-        DrawerItem(Screen.Home.route, "Inicio", Icons.Default.Home),
-        DrawerItem(Screen.List.route, "Lista / Pedidos", Icons.Default.List),
-        DrawerItem(Screen.Profile.route, "Perfil", Icons.Default.Person)
-    )
-
     ModalDrawerSheet {
-        // ENCABEZADO DE USUARIO
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .padding(24.dp)
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(50.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
-                    contentAlignment = Alignment.Center
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(vertical = 16.dp)
+            ) {
+                Surface(
+                    modifier = Modifier.size(48.dp),
+                    shape = CircleShape,
+                    color = Color(0xFFE1BEE7)
                 ) {
-                    Text(
-                        text = "MR",
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleLarge
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("MR", fontWeight = FontWeight.Bold, color = Color(0xFF4A148C))
+                    }
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
-                    Text(
-                        text = "Maria Rojas",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = "maria@tecsup.edu.pe",
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    Text("Maria Rojas", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("maria@tecsup.edu.pe", color = Color.Gray, fontSize = 12.sp)
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // ITEMS DE NAVEGACIÓN
-        items.forEach { item ->
             NavigationDrawerItem(
-                label = { Text(item.titulo) },
-                selected = rutaActual == item.ruta,
-                onClick = { onNavegar(item.ruta) },
-                icon = { Icon(item.icono, contentDescription = item.titulo) },
-                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                label = { Text("Inicio") },
+                selected = currentRoute == Screen.Home.route,
+                onClick = { onNavegar(Screen.Home.route); onCloseDrawer() },
+                icon = { Icon(Icons.Default.Home, contentDescription = null) }
+            )
+
+            NavigationDrawerItem(
+                label = { Text("Mis pedidos", fontWeight = FontWeight.Bold) },
+                selected = true,
+                onClick = { onNavegar(Screen.List.route); onCloseDrawer() },
+                icon = { Icon(Icons.Default.ShoppingCart, contentDescription = null) },
+                colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = Color(0xFFF3E5F5))
+            )
+
+            NavigationDrawerItem(
+                label = { Text("Favoritos") },
+                selected = false,
+                onClick = { onCloseDrawer() },
+                icon = { Icon(Icons.Default.FavoriteBorder, contentDescription = null) }
+            )
+
+            NavigationDrawerItem(
+                label = { Text("Perfil") },
+                selected = currentRoute == Screen.Profile.route,
+                onClick = { onNavegar(Screen.Profile.route); onCloseDrawer() },
+                icon = { Icon(Icons.Default.Person, contentDescription = null) }
+            )
+
+            NavigationDrawerItem(
+                label = { Text("Cerrar sesion") },
+                selected = false,
+                onClick = { onNavegar(Screen.Home.route); onCloseDrawer() },
+                icon = { Icon(Icons.Default.ExitToApp, contentDescription = null) }
             )
         }
-
-        Spacer(modifier = Modifier.weight(1f))
-        HorizontalDivider()
-
-        // BOTÓN CERRAR SESIÓN
-        NavigationDrawerItem(
-            label = { Text("Cerrar sesión") },
-            selected = false,
-            onClick = { onNavegar(Screen.Login.route) },
-            icon = { Icon(Icons.Default.ExitToApp, contentDescription = "Cerrar sesión") },
-            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-        )
     }
 }

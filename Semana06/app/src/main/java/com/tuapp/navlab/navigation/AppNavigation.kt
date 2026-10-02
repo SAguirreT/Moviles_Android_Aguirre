@@ -1,51 +1,63 @@
 package com.tuapp.navlab.navigation
 
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavType
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import com.tuapp.navlab.screens.*
+import com.tuapp.navlab.screens.DetailScreen
+import com.tuapp.navlab.screens.HomeScreen
+import com.tuapp.navlab.screens.ListScreen
+import com.tuapp.navlab.screens.ProfileScreen
+import kotlinx.coroutines.launch
 
 @Composable
 fun AppNavigation() {
-    // Inicialización del gestor de estados de navegación
     val navController = rememberNavController()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
-    NavHost(
-        navController = navController,
-        // Define la pantalla inicial al abrir la aplicación
-        startDestination = Screen.Home.route
-    ) {
-        // Mapeo hacia el composable HomeScreen
-        composable(Screen.Home.route) {
-            HomeScreen(navController)
-        }
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route ?: Screen.Home.route
 
-        // Mapeo hacia el composable ListScreen
-        composable(Screen.List.route) {
-            ListScreen(navController)
-        }
-
-        // Mapeo hacia el composable ProfileScreen
-        composable(Screen.Profile.route) {
-            ProfileScreen(navController)
-        }
-
-        // Mapeo con recepción de argumento de tipo entero
-        composable(
-            route = Screen.Detail.route,
-            arguments = listOf(
-                navArgument(name = "itemId") {
-                    type = NavType.IntType
-                    defaultValue = 0
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            AppDrawer(
+                currentRoute = currentRoute,
+                onNavegar = { route ->
+                    navController.navigate(route) {
+                        launchSingleTop = true
+                    }
+                },
+                onCloseDrawer = {
+                    scope.launch { drawerState.close() }
                 }
             )
-        ) { backStackEntry ->
-            // Recupera el ID enviado o asigna valor por defecto
-            val itemId = backStackEntry.arguments?.getInt("itemId") ?: 0
-            DetailScreen(navController, itemId)
+        }
+    ) {
+        NavHost(
+            navController = navController,
+            startDestination = Screen.List.route
+        ) {
+            composable(Screen.Home.route) {
+                HomeScreen(navController = navController)
+            }
+            composable(Screen.List.route) {
+                ListScreen(onOpenDrawer = { scope.launch { drawerState.open() } })
+            }
+            composable(Screen.Profile.route) {
+                ProfileScreen(navController = navController)
+            }
+            composable(Screen.Detail.route) { backStackEntry ->
+                val itemId = backStackEntry.arguments?.getString("itemId")?.toIntOrNull() ?: 0
+                DetailScreen(navController = navController, itemId = itemId)
+            }
         }
     }
 }

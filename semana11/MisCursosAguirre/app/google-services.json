@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "937827049083",
+    "project_id": "miscursosaguirre",
+    "storage_bucket": "miscursosaguirre.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:937827049083:android:62c4ec7a818708421fccde",
+        "android_client_info": {
+          "package_name": "com.tecsup.miscursosaguirre"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBO1xsT23Fdpnrav7FiqlpJc2kzqEjTz2w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

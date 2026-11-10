@@ -1,0 +1,11 @@
+# Android / Gradle
+.gradle/
+build/
+**/build/
+.idea/
+local.properties
+*.iml
+.DS_Store
+
+# Firebase credentials
+app/google-services.json

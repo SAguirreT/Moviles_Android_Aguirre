@@ -1,3 +1,5 @@
 package com.tecsup.laptops.notification
 
-// TODO: interface Notificador.
+interface Notificador {
+    fun mostrarNotificacion(titulo: String, mensaje: String)
+}

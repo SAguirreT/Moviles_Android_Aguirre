@@ -52,6 +52,7 @@ dependencies {
 
     // Si usas Coil para cargar las imágenes de la API:
     implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("androidx.compose.material:material-icons-extended")
 
     // Room
     implementation("androidx.room:room-runtime:2.8.5")

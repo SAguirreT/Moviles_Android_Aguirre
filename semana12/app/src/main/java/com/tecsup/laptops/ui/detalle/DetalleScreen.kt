@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.tecsup.laptops.data.repository.FavoritosManager
 import com.tecsup.laptops.domain.model.Item
 import com.tecsup.laptops.ui.UiState
 import com.tecsup.laptops.ui.components.Cargando
@@ -65,7 +64,10 @@ fun DetalleScreen(
                     mensaje = actualState.mensaje,
                     onReintentar = { viewModel.cargarDetalle(laptopId) }
                 )
-                is UiState.Exito -> DetalleContent(item = actualState.datos)
+                is UiState.Exito -> DetalleContent(
+                    item = actualState.datos,
+                    onToggleFavorito = { viewModel.toggleFavorito(it) }
+                )
             }
         }
     }
@@ -74,10 +76,10 @@ fun DetalleScreen(
 @Composable
 fun DetalleContent(
     item: Item,
+    onToggleFavorito: (Item) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    var esFavorito by remember { mutableStateOf(FavoritosManager.isFavorito(item.id)) }
 
     val imageRequest = ImageRequest.Builder(context)
         .data(item.imagenUrl)
@@ -111,10 +113,7 @@ fun DetalleContent(
 
                 // Botón de Favorito flotante en la esquina superior derecha
                 FilledIconButton(
-                    onClick = {
-                        esFavorito = !esFavorito
-                        FavoritosManager.toggleFavorito(item)
-                    },
+                    onClick = { onToggleFavorito(item) },
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
                         contentColor = MaterialTheme.colorScheme.primary
@@ -124,9 +123,9 @@ fun DetalleContent(
                         .padding(12.dp)
                 ) {
                     Icon(
-                        imageVector = if (esFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        imageVector = if (item.esFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Favorito",
-                        tint = if (esFavorito) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                        tint = if (item.esFavorito) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                     )
                 }
             }

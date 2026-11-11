@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.tecsup.laptops.data.repository.FavoritosManager
 import com.tecsup.laptops.domain.model.Item
 import com.tecsup.laptops.ui.UiState
 import com.tecsup.laptops.ui.components.Cargando
@@ -117,7 +116,8 @@ fun ListaScreen(
                     )
                     is UiState.Exito -> ListaContent(
                         items = actualState.datos,
-                        onItemClick = onLaptopClick
+                        onItemClick = onLaptopClick,
+                        onToggleFavorito = { viewModel.toggleFavorito(it) }
                     )
                 }
             }
@@ -129,6 +129,7 @@ fun ListaScreen(
 fun ListaContent(
     items: List<Item>,
     onItemClick: (Int) -> Unit,
+    onToggleFavorito: (Item) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -137,7 +138,11 @@ fun ListaContent(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(items) { laptop ->
-            ItemCard(item = laptop, onClick = { onItemClick(laptop.id) })
+            ItemCard(
+                item = laptop,
+                onClick = { onItemClick(laptop.id) },
+                onToggleFavorito = { onToggleFavorito(laptop) }
+            )
         }
     }
 }
@@ -146,10 +151,10 @@ fun ListaContent(
 fun ItemCard(
     item: Item,
     onClick: () -> Unit,
+    onToggleFavorito: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    var esFavorito by remember { mutableStateOf(FavoritosManager.isFavorito(item.id)) }
 
     val imageRequest = ImageRequest.Builder(context)
         .data(item.imagenUrl)
@@ -208,15 +213,12 @@ fun ItemCard(
             }
 
             IconButton(
-                onClick = {
-                    esFavorito = !esFavorito
-                    FavoritosManager.toggleFavorito(item)
-                }
+                onClick = { onToggleFavorito() }
             ) {
                 Icon(
-                    imageVector = if (esFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    imageVector = if (item.esFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = "Favorito",
-                    tint = if (esFavorito) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline
+                    tint = if (item.esFavorito) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline
                 )
             }
         }

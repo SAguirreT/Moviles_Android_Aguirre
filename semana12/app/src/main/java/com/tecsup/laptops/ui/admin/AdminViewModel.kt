@@ -5,8 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.tecsup.laptops.data.mapper.toDomain
-import com.tecsup.laptops.data.remote.RetrofitClient
+import com.tecsup.laptops.data.repository.ItemRepository
 import com.tecsup.laptops.domain.model.Item
 import com.tecsup.laptops.notification.Notificador
 import com.tecsup.laptops.ui.UiState
@@ -16,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class AdminViewModel(
+    private val itemRepository: ItemRepository,
     private val notificador: Notificador
 ) : ViewModel() {
 
@@ -33,9 +33,9 @@ class AdminViewModel(
         viewModelScope.launch {
             _uiState.value = UiState.Cargando
             try {
-                val response = RetrofitClient.apiService.getLaptops()
-                val inventario = response.products.map { it.toDomain() }
-                _uiState.value = UiState.Exito(inventario)
+                itemRepository.getLaptops().collect { items ->
+                    _uiState.value = UiState.Exito(items)
+                }
             } catch (e: Exception) {
                 _uiState.value = UiState.Error("Error al cargar la gestión de inventario")
             }
@@ -44,16 +44,16 @@ class AdminViewModel(
 
     fun sincronizar() {
         viewModelScope.launch {
-            try {
-                val response = RetrofitClient.apiService.getLaptops()
-                val inventario = response.products.map { it.toDomain() }
-                _uiState.value = UiState.Exito(inventario)
-                val n = inventario.size
-                notificador.mostrar("Datos actualizados", "Se guardaron $n elementos")
-                _aviso.value = "Se guardaron $n elementos"
-            } catch (e: Exception) {
-                _aviso.value = "Error al sincronizar: ${e.localizedMessage}"
-            }
+            val result = itemRepository.refreshLaptops()
+            result.fold(
+                onSuccess = { n ->
+                    notificador.mostrar("Datos actualizados", "Se guardaron $n elementos")
+                    _aviso.value = "Se guardaron $n elementos"
+                },
+                onFailure = { e ->
+                    _aviso.value = "Error al sincronizar: ${e.localizedMessage}"
+                }
+            )
         }
     }
 
@@ -68,9 +68,9 @@ class AdminViewModel(
     }
 
     companion object {
-        fun provideFactory(notificador: Notificador): ViewModelProvider.Factory = viewModelFactory {
+        fun provideFactory(itemRepository: ItemRepository, notificador: Notificador): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                AdminViewModel(notificador)
+                AdminViewModel(itemRepository, notificador)
             }
         }
     }

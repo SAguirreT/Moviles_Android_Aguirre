@@ -5,17 +5,19 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.tecsup.laptops.data.mapper.toDomain
-import com.tecsup.laptops.data.remote.RetrofitClient
+import com.tecsup.laptops.data.repository.ItemRepository
 import com.tecsup.laptops.domain.model.Item
 import com.tecsup.laptops.notification.Notificador
 import com.tecsup.laptops.ui.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 class ListaViewModel(
+    private val repo: ItemRepository,
     private val notificador: Notificador
 ) : ViewModel() {
 
@@ -26,35 +28,64 @@ class ListaViewModel(
     val aviso: StateFlow<String?> = _aviso.asStateFlow()
 
     init {
-        cargarLaptops()
+        observarItems()
+        refrescar()
     }
 
-    fun cargarLaptops() {
+    private fun observarItems() {
         viewModelScope.launch {
-            _uiState.value = UiState.Cargando
-            try {
-                val response = RetrofitClient.apiService.getLaptops()
-                val items = response.products.map { it.toDomain() }
-                _uiState.value = UiState.Exito(items)
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error("Error al cargar la lista de laptops: ${e.localizedMessage}")
-            }
+            repo.items
+                .catch { e ->
+                    _uiState.value = UiState.Error("Error al leer base de datos local: ${e.localizedMessage}")
+                }
+                .collect { lista ->
+                    if (lista.isNotEmpty() || repo.cantidadGuardada() > 0) {
+                        _uiState.value = UiState.Exito(lista)
+                    }
+                }
         }
     }
 
     fun refrescar() {
         viewModelScope.launch {
-            try {
-                val response = RetrofitClient.apiService.getLaptops()
-                val items = response.products.map { it.toDomain() }
-                _uiState.value = UiState.Exito(items)
-                val n = items.size
-                notificador.mostrar("Datos actualizados", "Se guardaron $n elementos")
-                _aviso.value = "Se guardaron $n elementos"
-            } catch (e: Exception) {
-                _aviso.value = "Error al refrescar: ${e.localizedMessage}"
+            if (repo.cantidadGuardada() == 0 && _uiState.value !is UiState.Exito) {
+                _uiState.value = UiState.Cargando
             }
+            
+            val result = repo.refrescar()
+            result.fold(
+                onSuccess = { n ->
+                    notificador.mostrar("Datos actualizados", "Se guardaron $n elementos")
+                    _aviso.value = "Se guardaron $n elementos"
+                },
+                onFailure = { e ->
+                    if (repo.cantidadGuardada() == 0) {
+                        val mensaje = if (e is IOException) {
+                            "No hay conexión a internet"
+                        } else {
+                            e.localizedMessage ?: "Error desconocido"
+                        }
+                        _uiState.value = UiState.Error(mensaje)
+                    } else {
+                        _aviso.value = "Sin conexión: mostrando datos guardados"
+                    }
+                }
+            )
         }
+    }
+
+    fun cargarLaptops() {
+        refrescar()
+    }
+
+    fun alternarFavorito(id: Int) {
+        viewModelScope.launch {
+            repo.alternarFavorito(id)
+        }
+    }
+
+    fun toggleFavorito(item: Item) {
+        alternarFavorito(item.id)
     }
 
     fun limpiarAviso() {
@@ -62,9 +93,9 @@ class ListaViewModel(
     }
 
     companion object {
-        fun provideFactory(notificador: Notificador): ViewModelProvider.Factory = viewModelFactory {
+        fun provideFactory(repo: ItemRepository, notificador: Notificador): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                ListaViewModel(notificador)
+                ListaViewModel(repo, notificador)
             }
         }
     }

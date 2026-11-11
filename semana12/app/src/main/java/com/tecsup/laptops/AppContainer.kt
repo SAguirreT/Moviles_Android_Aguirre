@@ -6,6 +6,9 @@ import com.tecsup.laptops.data.auth.AuthRepository
 import com.tecsup.laptops.data.auth.FirebaseAuthRepository
 import com.tecsup.laptops.data.local.AppDatabase
 import com.tecsup.laptops.data.local.ItemDao
+import com.tecsup.laptops.data.remote.RetrofitClient
+import com.tecsup.laptops.data.repository.ItemRepository
+import com.tecsup.laptops.data.repository.ItemRepositoryImpl
 import com.tecsup.laptops.notification.Notificador
 import com.tecsup.laptops.notification.NotificadorAndroid
 
@@ -13,6 +16,7 @@ interface AppContainer {
     val itemDao: ItemDao
     val authRepository: AuthRepository
     val notificador: Notificador
+    val itemRepository: ItemRepository
 
     companion object {
         fun obtener(context: Context): AppContainer {
@@ -41,5 +45,9 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
 
     override val notificador: Notificador by lazy {
         NotificadorAndroid(context.applicationContext)
+    }
+
+    override val itemRepository: ItemRepository by lazy {
+        ItemRepositoryImpl(RetrofitClient.apiService, itemDao)
     }
 }

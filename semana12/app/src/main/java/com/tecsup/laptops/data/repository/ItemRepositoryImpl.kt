@@ -5,6 +5,7 @@ import com.tecsup.laptops.data.mapper.toDomain
 import com.tecsup.laptops.data.mapper.toEntity
 import com.tecsup.laptops.data.remote.ApiService
 import com.tecsup.laptops.domain.model.Item
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -25,7 +26,8 @@ class ItemRepositoryImpl(
     override fun cantidadGuardada(): Int {
         return try {
             itemDao.getCount()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
             0
         }
     }
@@ -39,7 +41,8 @@ class ItemRepositoryImpl(
             }
             itemDao.insertLaptops(entities)
             Result.success(entities.size)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
             Result.failure(e)
         }
     }
@@ -68,7 +71,8 @@ class ItemRepositoryImpl(
         return try {
             val dto = apiService.getLaptopById(id)
             dto.toDomain()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
             null
         }
     }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.tecsup.laptops.ui.UiState
+import com.tecsup.laptops.utils.toUserFriendlyMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,7 +24,7 @@ class LoginViewModel : ViewModel() {
             return
         }
 
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()) {
             _uiState.value = UiState.Error("Ingresa un correo electrónico válido.")
             return
         }
@@ -39,18 +40,14 @@ class LoginViewModel : ViewModel() {
                 auth.signInWithEmailAndPassword(email.trim(), clave.trim()).await()
                 _uiState.value = UiState.Exito(Unit)
                 onExito()
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 val errorMsg = e.message ?: ""
                 val mensaje = when {
                     errorMsg.contains("badly formatted", true) -> "Formato de correo electrónico inválido."
-                    errorMsg.contains("invalid-credential", true) || errorMsg.contains("user-not-found", true) -> "Correo o contraseña incorrectos."
-                    // Fallback automático para errores de red/conexión en emulador
-                    errorMsg.contains("network", true) || errorMsg.contains("timeout", true) || errorMsg.contains("unreachable", true) || errorMsg.contains("hostname", true) -> {
-                        _uiState.value = UiState.Exito(Unit)
-                        onExito()
-                        return@launch
-                    }
-                    else -> errorMsg.ifBlank { "Error al iniciar sesión con Firebase." }
+                    errorMsg.contains("invalid-credential", true) || errorMsg.contains("user-not-found", true) || errorMsg.contains("wrong-password", true) -> "Correo o contraseña incorrectos."
+                    errorMsg.contains("network", true) || errorMsg.contains("timeout", true) || errorMsg.contains("unreachable", true) -> "No hay conexión a internet."
+                    else -> e.toUserFriendlyMessage()
                 }
                 _uiState.value = UiState.Error(mensaje)
             }

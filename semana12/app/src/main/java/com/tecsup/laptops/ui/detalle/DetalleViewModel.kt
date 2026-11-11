@@ -9,6 +9,7 @@ import com.tecsup.laptops.data.mapper.toDomain
 import com.tecsup.laptops.data.repository.ItemRepository
 import com.tecsup.laptops.domain.model.Item
 import com.tecsup.laptops.ui.UiState
+import com.tecsup.laptops.utils.toUserFriendlyMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,6 +26,7 @@ class DetalleViewModel(
         viewModelScope.launch {
             _uiState.value = UiState.Cargando
             try {
+                // Primero busca en Room (Offline-First / datos guardados sin internet)
                 val itemLocal = itemRepository.getLaptopById(id)
                 if (itemLocal != null) {
                     _uiState.value = UiState.Exito(itemLocal)
@@ -33,8 +35,14 @@ class DetalleViewModel(
                     val laptop = dto.toDomain()
                     _uiState.value = UiState.Exito(laptop)
                 }
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error("Error al obtener el detalle de la laptop: ${e.localizedMessage}")
+            } catch (e: Throwable) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                val itemLocal = itemRepository.getLaptopById(id)
+                if (itemLocal != null) {
+                    _uiState.value = UiState.Exito(itemLocal)
+                } else {
+                    _uiState.value = UiState.Error(e.toUserFriendlyMessage())
+                }
             }
         }
     }

@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LaptopMac
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,6 +15,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tecsup.laptops.ui.UiState
+import com.tecsup.laptops.ui.theme.Dimens
 
 @Composable
 fun LoginScreen(
@@ -26,6 +27,7 @@ fun LoginScreen(
     var clave by remember { mutableStateOf("") }
 
     val uiState by viewModel.uiState.collectAsState()
+    val isLoading = uiState is UiState.Cargando
 
     Box(
         modifier = modifier.fillMaxSize(),
@@ -74,6 +76,7 @@ fun LoginScreen(
                     leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
+                    enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -87,16 +90,18 @@ fun LoginScreen(
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     shape = RoundedCornerShape(12.dp),
+                    enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                if (uiState is UiState.Cargando) {
+                if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(36.dp))
                 } else {
                     Button(
                         onClick = { viewModel.login(email, clave, onLoginExitoso) },
+                        enabled = !isLoading,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),

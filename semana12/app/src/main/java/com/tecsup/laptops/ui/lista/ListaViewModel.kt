@@ -9,12 +9,12 @@ import com.tecsup.laptops.data.repository.ItemRepository
 import com.tecsup.laptops.domain.model.Item
 import com.tecsup.laptops.notification.Notificador
 import com.tecsup.laptops.ui.UiState
+import com.tecsup.laptops.utils.toUserFriendlyMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
-import java.io.IOException
 
 class ListaViewModel(
     private val repo: ItemRepository,
@@ -36,7 +36,7 @@ class ListaViewModel(
         viewModelScope.launch {
             repo.items
                 .catch { e ->
-                    _uiState.value = UiState.Error("Error al leer base de datos local: ${e.localizedMessage}")
+                    _uiState.value = UiState.Error(e.toUserFriendlyMessage())
                 }
                 .collect { lista ->
                     _uiState.value = UiState.Exito(lista)
@@ -58,12 +58,7 @@ class ListaViewModel(
                 },
                 onFailure = { e ->
                     if (repo.cantidadGuardada() == 0) {
-                        val mensaje = if (e is IOException) {
-                            "No hay conexión a internet"
-                        } else {
-                            e.localizedMessage ?: "Error desconocido"
-                        }
-                        _uiState.value = UiState.Error(mensaje)
+                        _uiState.value = UiState.Error(e.toUserFriendlyMessage())
                     } else {
                         _aviso.value = "Sin conexión: mostrando datos guardados"
                     }
@@ -73,6 +68,7 @@ class ListaViewModel(
     }
 
     fun cargarLaptops() {
+        _uiState.value = UiState.Cargando
         refrescar()
     }
 

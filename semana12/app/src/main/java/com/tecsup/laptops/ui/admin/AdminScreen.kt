@@ -1,14 +1,21 @@
 package com.tecsup.laptops.ui.admin
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.tecsup.laptops.domain.model.Item
 import com.tecsup.laptops.ui.UiState
 import com.tecsup.laptops.ui.components.Cargando
@@ -22,8 +29,28 @@ fun AdminScreen(
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.uiState.collectAsState()
+    val aviso by viewModel.aviso.collectAsState()
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val notifConcedida = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+    } else {
+        true
+    }
+
+    LaunchedEffect(aviso) {
+        aviso?.let { mensaje ->
+            snackbarHostState.showSnackbar(mensaje)
+            viewModel.limpiarAviso()
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Panel de Administración") },
@@ -31,23 +58,37 @@ fun AdminScreen(
                     TextButton(onClick = onVolver) {
                         Text("< Volver")
                     }
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.sincronizar() }) {
+                        Icon(imageVector = Icons.Default.Refresh, contentDescription = "Sincronizar")
+                    }
+                    IconButton(onClick = { viewModel.limpiarCache() }) {
+                        Icon(imageVector = Icons.Default.DeleteSweep, contentDescription = "Limpiar Caché")
+                    }
                 }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { /* Acción para agregar laptop */ }) {
-                Text("+")
-            }
         }
     ) { paddingValues ->
-        Box(modifier = modifier.padding(paddingValues)) {
-            when (val actualState = state) {
-                is UiState.Cargando -> Cargando()
-                is UiState.Error -> ErrorView(
-                    mensaje = actualState.mensaje,
-                    onReintentar = { viewModel.cargarInventarioAdmin() }
+        Column(modifier = modifier.padding(paddingValues).fillMaxSize()) {
+            if (!notifConcedida) {
+                Text(
+                    text = "Notificaciones desactivadas",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
-                is UiState.Exito -> AdminInventoryList(items = actualState.datos)
+            }
+
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                when (val actualState = state) {
+                    is UiState.Cargando -> Cargando()
+                    is UiState.Error -> ErrorView(
+                        mensaje = actualState.mensaje,
+                        onReintentar = { viewModel.cargarInventarioAdmin() }
+                    )
+                    is UiState.Exito -> AdminInventoryList(items = actualState.datos)
+                }
             }
         }
     }
@@ -72,9 +113,10 @@ fun AdminInventoryList(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(text = item.titulo, style = MaterialTheme.typography.titleMedium)
                         Text(text = "Marca: ${item.marca}", style = MaterialTheme.typography.bodyMedium)
                         Text(text = "$ ${item.precio}", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)

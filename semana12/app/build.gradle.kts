@@ -7,7 +7,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
 
     // Firebase se activará cuando configuremos google-services.json
-    // id("com.google.gms.google-services")
+     id("com.google.gms.google-services")
 }
 
 android {
@@ -52,7 +52,7 @@ dependencies {
 
     // Si usas Coil para cargar las imágenes de la API:
     implementation("io.coil-kt:coil-compose:2.5.0")
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
 
     // Room
     implementation("androidx.room:room-runtime:2.8.5")

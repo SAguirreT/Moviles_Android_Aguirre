@@ -2,6 +2,8 @@ package com.tecsup.laptops.ui.detalle
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tecsup.laptops.data.mapper.toDomain
+import com.tecsup.laptops.data.remote.RetrofitClient
 import com.tecsup.laptops.domain.model.Item
 import com.tecsup.laptops.ui.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,17 +20,12 @@ class DetalleViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = UiState.Cargando
             try {
-                val laptop = Item(
-                    id = id,
-                    titulo = "MacBook Pro 16",
-                    descripcion = "Laptop de alto rendimiento con chip M3 Max, 32GB RAM y SSD de 1TB.",
-                    precio = 2499.99,
-                    marca = "Apple",
-                    imagenUrl = null
-                )
+                // Llamada real a Retrofit para obtener el detalle de la laptop por ID
+                val dto = RetrofitClient.apiService.getLaptopById(id)
+                val laptop = dto.toDomain()
                 _uiState.value = UiState.Exito(laptop)
             } catch (e: Exception) {
-                _uiState.value = UiState.Error("Error al obtener el detalle de la laptop")
+                _uiState.value = UiState.Error("Error al obtener el detalle de la laptop: ${e.localizedMessage}")
             }
         }
     }

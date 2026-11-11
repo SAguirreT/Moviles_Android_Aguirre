@@ -59,7 +59,12 @@ class AdminViewModel(
 
     fun limpiarCache() {
         viewModelScope.launch {
-            _aviso.value = "Caché limpiada correctamente"
+            try {
+                itemRepository.limpiarCache()
+                _aviso.value = "Caché limpiada correctamente"
+            } catch (e: Exception) {
+                _aviso.value = "Error al limpiar caché: ${e.localizedMessage}"
+            }
         }
     }
 

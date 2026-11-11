@@ -3,33 +3,30 @@ package com.tecsup.laptops.ui.lista
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.tecsup.laptops.domain.model.Item
 import com.tecsup.laptops.ui.UiState
 import com.tecsup.laptops.ui.components.Cargando
+import com.tecsup.laptops.ui.components.EmptyState
 import com.tecsup.laptops.ui.components.ErrorView
+import com.tecsup.laptops.ui.components.ItemCard
+import com.tecsup.laptops.ui.theme.Dimens
+import com.tecsup.laptops.ui.theme.LaptopsTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,6 +36,7 @@ fun ListaScreen(
     onLaptopClick: (Int) -> Unit,
     onIrAFavoritos: () -> Unit,
     onIrAAdmin: () -> Unit,
+    onCerrarSesion: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -64,47 +62,76 @@ fun ListaScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Catálogo de Laptops", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        "Catálogo de Laptops",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                },
                 actions = {
                     IconButton(onClick = { viewModel.refrescar() }) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Sincronizar",
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                     IconButton(onClick = onIrAFavoritos) {
                         Icon(
                             imageVector = Icons.Default.Favorite,
                             contentDescription = "Mis Favoritos",
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                     if (esAdmin) {
                         IconButton(onClick = onIrAAdmin) {
                             Icon(
                                 imageVector = Icons.Default.AdminPanelSettings,
-                                contentDescription = "Panel Admin"
+                                contentDescription = "Panel Admin",
+                                tint = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.size(24.dp)
                             )
                         }
                     }
+                    IconButton(onClick = onCerrarSesion) {
+                        Icon(
+                            imageVector = Icons.Default.ExitToApp,
+                            contentDescription = "Cerrar sesión",
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
     ) { paddingValues ->
-        Column(modifier = modifier.padding(paddingValues).fillMaxSize()) {
+        Column(
+            modifier = modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+        ) {
             if (!notifConcedida) {
-                Text(
-                    text = "Notificaciones desactivadas",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                )
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Notificaciones desactivadas",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = Dimens.M, vertical = Dimens.XS)
+                    )
+                }
             }
 
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -114,11 +141,20 @@ fun ListaScreen(
                         mensaje = actualState.mensaje,
                         onReintentar = { viewModel.cargarLaptops() }
                     )
-                    is UiState.Exito -> ListaContent(
-                        items = actualState.datos,
-                        onItemClick = onLaptopClick,
-                        onToggleFavorito = { viewModel.toggleFavorito(it) }
-                    )
+                    is UiState.Exito -> {
+                        if (actualState.datos.isEmpty()) {
+                            EmptyState(
+                                titulo = "Catálogo vacío",
+                                mensaje = "No hay elementos guardados"
+                            )
+                        } else {
+                            ListaContent(
+                                items = actualState.datos,
+                                onItemClick = onLaptopClick,
+                                onToggleFavorito = { viewModel.toggleFavorito(it) }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -134,8 +170,8 @@ fun ListaContent(
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(Dimens.M),
+        verticalArrangement = Arrangement.spacedBy(Dimens.M)
     ) {
         items(items) { laptop ->
             ItemCard(
@@ -147,80 +183,19 @@ fun ListaContent(
     }
 }
 
+@Preview(showBackground = true)
 @Composable
-fun ItemCard(
-    item: Item,
-    onClick: () -> Unit,
-    onToggleFavorito: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val context = LocalContext.current
-
-    val imageRequest = ImageRequest.Builder(context)
-        .data(item.imagenUrl)
-        .crossfade(true)
-        .build()
-
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.size(72.dp)
-            ) {
-                AsyncImage(
-                    model = imageRequest,
-                    contentDescription = item.titulo,
-                    contentScale = ContentScale.Crop,
-                    placeholder = painterResource(id = android.R.drawable.ic_menu_gallery),
-                    error = painterResource(id = android.R.drawable.ic_dialog_alert),
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = item.titulo,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                SuggestionChip(
-                    onClick = { },
-                    label = { Text(item.marca, fontSize = 12.sp) },
-                    modifier = Modifier.height(26.dp)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "$ ${item.precio}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.ExtraBold
-                )
-            }
-
-            IconButton(
-                onClick = { onToggleFavorito() }
-            ) {
-                Icon(
-                    imageVector = if (item.esFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = "Favorito",
-                    tint = if (item.esFavorito) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline
-                )
-            }
+fun ListaScreenPreview() {
+    LaptopsTheme {
+        Box(modifier = Modifier.fillMaxSize()) {
+            ListaContent(
+                items = listOf(
+                    Item(1, "MacBook Pro 16 M3 Max", "Laptop de alto rendimiento", 2499.99, "Apple", null, false),
+                    Item(2, "Dell XPS 15 OLED", "Pantalla 4K OLED e Intel i9", 1999.99, "Dell", null, true)
+                ),
+                onItemClick = {},
+                onToggleFavorito = {}
+            )
         }
     }
 }

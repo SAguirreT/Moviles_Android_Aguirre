@@ -13,4 +13,5 @@ interface ItemRepository {
     suspend fun alternarFavorito(id: Int)
     suspend fun updateFavorito(id: Int, esFavorito: Boolean) { alternarFavorito(id) }
     suspend fun getLaptopById(id: Int): Item?
+    suspend fun limpiarCache()
 }

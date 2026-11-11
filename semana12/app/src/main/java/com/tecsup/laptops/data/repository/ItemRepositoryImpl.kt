@@ -45,9 +45,18 @@ class ItemRepositoryImpl(
     }
 
     override suspend fun alternarFavorito(id: Int) {
-        val laptop = itemDao.getLaptopById(id)
-        if (laptop != null) {
-            itemDao.updateFavorito(id, !laptop.esFavorito)
+        val entity = itemDao.getLaptopById(id)
+        if (entity != null) {
+            val updated = entity.copy(esFavorito = !entity.esFavorito)
+            itemDao.insertLaptops(listOf(updated))
+        }
+    }
+
+    override suspend fun updateFavorito(id: Int, esFavorito: Boolean) {
+        val entity = itemDao.getLaptopById(id)
+        if (entity != null) {
+            val updated = entity.copy(esFavorito = esFavorito)
+            itemDao.insertLaptops(listOf(updated))
         }
     }
 
@@ -62,5 +71,9 @@ class ItemRepositoryImpl(
         } catch (e: Exception) {
             null
         }
+    }
+
+    override suspend fun limpiarCache() {
+        itemDao.borrarTodo()
     }
 }

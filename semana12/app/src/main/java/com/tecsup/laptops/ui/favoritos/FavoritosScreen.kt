@@ -1,13 +1,12 @@
 package com.tecsup.laptops.ui.favoritos
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -15,13 +14,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tecsup.laptops.domain.model.Item
 import com.tecsup.laptops.ui.UiState
 import com.tecsup.laptops.ui.components.Cargando
 import com.tecsup.laptops.ui.components.ErrorView
+import com.tecsup.laptops.ui.components.ItemCard
+import com.tecsup.laptops.ui.theme.Dimens
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun FavoritosScreen(
     viewModel: FavoritosViewModel,
@@ -31,21 +33,34 @@ fun FavoritosScreen(
     val state by viewModel.uiState.collectAsState()
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Mis Favoritos", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        "Mis Favoritos",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onVolver) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
     ) { paddingValues ->
-        Box(modifier = modifier.padding(paddingValues)) {
+        Box(modifier = modifier.padding(paddingValues).fillMaxSize()) {
             when (val actualState = state) {
                 is UiState.Cargando -> Cargando()
                 is UiState.Error -> ErrorView(
@@ -55,84 +70,43 @@ fun FavoritosScreen(
                 is UiState.Exito -> {
                     if (actualState.datos.isEmpty()) {
                         Column(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(Dimens.XL),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.BookmarkBorder,
+                                imageVector = Icons.Outlined.FavoriteBorder,
                                 contentDescription = null,
-                                modifier = Modifier.size(72.dp),
-                                tint = MaterialTheme.colorScheme.outline
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(Dimens.L))
                             Text(
-                                text = "No tienes laptops guardadas en favoritos",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.outline
+                                text = "Aún no tienes favoritos",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                textAlign = TextAlign.Center
                             )
                         }
                     } else {
-                        FavoritosList(
-                            items = actualState.datos,
-                            onToggleFavorito = { viewModel.toggleFavorito(it) }
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun FavoritosList(
-    items: List<Item>,
-    onToggleFavorito: (Item) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(items) { laptop ->
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = laptop.titulo,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Marca: ${laptop.marca}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "$ ${laptop.precio}",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    IconButton(onClick = { onToggleFavorito(laptop) }) {
-                        Icon(
-                            imageVector = Icons.Default.Favorite,
-                            contentDescription = "Eliminar favorito",
-                            tint = MaterialTheme.colorScheme.error
-                        )
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(Dimens.M),
+                            verticalArrangement = Arrangement.spacedBy(Dimens.M)
+                        ) {
+                            items(actualState.datos, key = { it.id }) { laptop ->
+                                ItemCard(
+                                    item = laptop,
+                                    onClick = { },
+                                    onToggleFavorito = { viewModel.toggleFavorito(laptop) },
+                                    isCompact = true,
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
+                        }
                     }
                 }
             }

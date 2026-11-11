@@ -69,6 +69,12 @@ fun AppNav(
                 },
                 onIrAAdmin = {
                     navController.navigate(Pantalla.Admin.ruta)
+                },
+                onCerrarSesion = {
+                    FirebaseAuth.getInstance().signOut()
+                    navController.navigate(Pantalla.Login.ruta) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }

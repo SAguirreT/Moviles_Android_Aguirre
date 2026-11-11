@@ -26,6 +26,6 @@ interface ItemDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLaptops(laptops: List<ItemEntity>)
 
-    @Query("UPDATE laptops SET esFavorito = :esFavorito WHERE id = :id")
-    suspend fun updateFavorito(id: Int, esFavorito: Boolean)
+    @Query("DELETE FROM laptops")
+    suspend fun borrarTodo()
 }

@@ -39,9 +39,7 @@ class ListaViewModel(
                     _uiState.value = UiState.Error("Error al leer base de datos local: ${e.localizedMessage}")
                 }
                 .collect { lista ->
-                    if (lista.isNotEmpty() || repo.cantidadGuardada() > 0) {
-                        _uiState.value = UiState.Exito(lista)
-                    }
+                    _uiState.value = UiState.Exito(lista)
                 }
         }
     }

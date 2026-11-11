@@ -48,6 +48,10 @@ class FakeItemRepository(
     override suspend fun getLaptopById(id: Int): Item? {
         return itemsFlow.value.find { it.id == id }
     }
+
+    override suspend fun limpiarCache() {
+        itemsFlow.value = emptyList()
+    }
 }
 
 class FakeNotificador : Notificador {

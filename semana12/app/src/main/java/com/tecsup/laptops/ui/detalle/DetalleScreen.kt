@@ -1,17 +1,22 @@
 package com.tecsup.laptops.ui.detalle
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -24,6 +29,8 @@ import com.tecsup.laptops.domain.model.Item
 import com.tecsup.laptops.ui.UiState
 import com.tecsup.laptops.ui.components.Cargando
 import com.tecsup.laptops.ui.components.ErrorView
+import com.tecsup.laptops.ui.theme.Dimens
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,19 +47,29 @@ fun DetalleScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Detalle de la Laptop", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        "Detalle de Laptop",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onVolver) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
+                            contentDescription = "Volver",
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
@@ -90,120 +107,159 @@ fun DetalleContent(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(Dimens.M),
+        verticalArrangement = Arrangement.spacedBy(Dimens.L)
     ) {
-        // Hero Image Card con Banner de alta calidad
-        ElevatedCard(
+        // Imagen grande arriba sobre gris muy claro con botón de favorito en círculo blanco
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(260.dp),
-            shape = RoundedCornerShape(20.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                .height(280.dp)
+                .clip(RoundedCornerShape(Dimens.CornerRadiusBase))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
         ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                AsyncImage(
-                    model = imageRequest,
-                    contentDescription = item.titulo,
-                    contentScale = ContentScale.Crop,
-                    placeholder = painterResource(id = android.R.drawable.ic_menu_gallery),
-                    error = painterResource(id = android.R.drawable.ic_dialog_alert),
-                    modifier = Modifier.fillMaxSize()
-                )
+            AsyncImage(
+                model = imageRequest,
+                contentDescription = item.titulo,
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(id = android.R.drawable.ic_menu_gallery),
+                error = painterResource(id = android.R.drawable.ic_dialog_alert),
+                modifier = Modifier.fillMaxSize()
+            )
 
-                // Botón de Favorito flotante en la esquina superior derecha
-                FilledIconButton(
-                    onClick = { onToggleFavorito(item) },
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
-                        contentColor = MaterialTheme.colorScheme.primary
-                    ),
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(12.dp)
-                ) {
-                    Icon(
-                        imageVector = if (item.esFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "Favorito",
-                        tint = if (item.esFavorito) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                    )
-                }
+            IconButton(
+                onClick = { onToggleFavorito(item) },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(Dimens.M)
+                    .size(40.dp)
+                    .background(Color.White, CircleShape)
+            ) {
+                Icon(
+                    imageVector = if (item.esFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = "Favorito",
+                    tint = if (item.esFavorito) Color.Red else Color.DarkGray,
+                    modifier = Modifier.size(22.dp)
+                )
             }
         }
 
-        // Chip de Marca y Título Principal
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            SuggestionChip(
-                onClick = { },
-                label = { Text(item.marca, fontWeight = FontWeight.SemiBold, fontSize = 13.sp) },
-                colors = SuggestionChipDefaults.suggestionChipColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    labelColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
+        // Marca, Título y Fila Precio/Rating
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.XS)) {
+            Text(
+                text = item.marca.uppercase(Locale.ROOT),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                letterSpacing = 1.2.sp
             )
 
             Text(
                 text = item.titulo,
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
             )
-        }
 
-        // Tarjeta de Precio
-        ElevatedCard(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
-        ) {
+            Spacer(modifier = Modifier.height(Dimens.XXS))
+
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        text = "Precio",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                Text(
+                    text = "$ ${String.format(Locale.US, "%,.2f", item.precio)}",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.XXS)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        tint = Color(0xFFFFB800),
+                        modifier = Modifier.size(20.dp)
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "$ ${item.precio}",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.ExtraBold
+                        text = "4.8",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
         }
 
-        // Tarjeta de Descripción
-        ElevatedCard(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+        // Descripción con subtítulo simple y texto en gris oscuro
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.S)) {
+            Text(
+                text = "Descripción",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = item.descripcion,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 24.sp
+            )
+        }
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+        // Datos extra (garantía y envío) como filas limpias
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.M)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "Descripción del producto",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = item.descripcion,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                    lineHeight = 22.sp
-                )
+                Text(text = "Garantía", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = "1 año de fábrica", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "Envío", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = "Envío gratuito a todo el país", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
             }
         }
+
+        Spacer(modifier = Modifier.height(Dimens.M))
+
+        // Botón principal de favorito al final, negro con texto blanco
+        Button(
+            onClick = { onToggleFavorito(item) },
+            shape = RoundedCornerShape(Dimens.CornerRadiusBase),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Black,
+                contentColor = Color.White
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+        ) {
+            Icon(
+                imageVector = if (item.esFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(Dimens.S))
+            Text(
+                text = if (item.esFavorito) "Quitar de favoritos" else "Agregar a favoritos",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(Dimens.XL))
     }
 }

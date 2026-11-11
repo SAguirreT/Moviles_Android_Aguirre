@@ -5,17 +5,18 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.tecsup.laptops.data.mapper.toDomain
-import com.tecsup.laptops.data.remote.RetrofitClient
+import com.tecsup.laptops.data.repository.ItemRepository
 import com.tecsup.laptops.domain.model.Item
 import com.tecsup.laptops.notification.Notificador
 import com.tecsup.laptops.ui.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 
 class ListaViewModel(
+    private val itemRepository: ItemRepository,
     private val notificador: Notificador
 ) : ViewModel() {
 
@@ -26,34 +27,56 @@ class ListaViewModel(
     val aviso: StateFlow<String?> = _aviso.asStateFlow()
 
     init {
+        observarLaptops()
         cargarLaptops()
+    }
+
+    private fun observarLaptops() {
+        viewModelScope.launch {
+            itemRepository.getLaptops()
+                .catch { e ->
+                    _uiState.value = UiState.Error("Error al leer base de datos local: ${e.localizedMessage}")
+                }
+                .collect { items ->
+                    if (items.isNotEmpty()) {
+                        _uiState.value = UiState.Exito(items)
+                    }
+                }
+        }
     }
 
     fun cargarLaptops() {
         viewModelScope.launch {
-            _uiState.value = UiState.Cargando
-            try {
-                val response = RetrofitClient.apiService.getLaptops()
-                val items = response.products.map { it.toDomain() }
-                _uiState.value = UiState.Exito(items)
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error("Error al cargar la lista de laptops: ${e.localizedMessage}")
+            if (_uiState.value !is UiState.Exito) {
+                _uiState.value = UiState.Cargando
             }
+            val result = itemRepository.refreshLaptops()
+            result.onFailure { e ->
+                if (_uiState.value !is UiState.Exito) {
+                    _uiState.value = UiState.Error("Error al cargar laptops: ${e.localizedMessage}")
+                }
+            }
+        }
+    }
+
+    fun toggleFavorito(item: Item) {
+        viewModelScope.launch {
+            itemRepository.updateFavorito(item.id, !item.esFavorito)
         }
     }
 
     fun refrescar() {
         viewModelScope.launch {
-            try {
-                val response = RetrofitClient.apiService.getLaptops()
-                val items = response.products.map { it.toDomain() }
-                _uiState.value = UiState.Exito(items)
-                val n = items.size
-                notificador.mostrar("Datos actualizados", "Se guardaron $n elementos")
-                _aviso.value = "Se guardaron $n elementos"
-            } catch (e: Exception) {
-                _aviso.value = "Error al refrescar: ${e.localizedMessage}"
-            }
+            val result = itemRepository.refreshLaptops()
+            result.fold(
+                onSuccess = { n ->
+                    notificador.mostrar("Datos actualizados", "Se guardaron $n elementos")
+                    _aviso.value = "Se guardaron $n elementos"
+                },
+                onFailure = { e ->
+                    _aviso.value = "Error al sincronizar: ${e.localizedMessage}"
+                }
+            )
         }
     }
 
@@ -62,9 +85,9 @@ class ListaViewModel(
     }
 
     companion object {
-        fun provideFactory(notificador: Notificador): ViewModelProvider.Factory = viewModelFactory {
+        fun provideFactory(itemRepository: ItemRepository, notificador: Notificador): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                ListaViewModel(notificador)
+                ListaViewModel(itemRepository, notificador)
             }
         }
     }

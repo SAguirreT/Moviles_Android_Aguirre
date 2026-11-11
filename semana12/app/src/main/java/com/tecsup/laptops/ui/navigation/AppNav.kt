@@ -52,7 +52,7 @@ fun AppNav(
         composable(Pantalla.Lista.ruta) {
             val context = LocalContext.current
             val container = AppContainer.obtener(context)
-            val viewModel: ListaViewModel = viewModel(factory = ListaViewModel.provideFactory(container.notificador))
+            val viewModel: ListaViewModel = viewModel(factory = ListaViewModel.provideFactory(container.itemRepository, container.notificador))
 
             // Validar si el usuario actual autenticado es Administrador
             val usuarioActual = FirebaseAuth.getInstance().currentUser
@@ -74,7 +74,9 @@ fun AppNav(
         }
         composable(Pantalla.Detalle.ruta) { backStackEntry ->
             val id = backStackEntry.arguments?.getString("id")?.toIntOrNull() ?: 0
-            val viewModel: DetalleViewModel = viewModel()
+            val context = LocalContext.current
+            val container = AppContainer.obtener(context)
+            val viewModel: DetalleViewModel = viewModel(factory = DetalleViewModel.provideFactory(container.itemRepository))
             DetalleScreen(
                 laptopId = id,
                 viewModel = viewModel,
@@ -82,7 +84,9 @@ fun AppNav(
             )
         }
         composable(Pantalla.Favoritos.ruta) {
-            val viewModel: FavoritosViewModel = viewModel()
+            val context = LocalContext.current
+            val container = AppContainer.obtener(context)
+            val viewModel: FavoritosViewModel = viewModel(factory = FavoritosViewModel.provideFactory(container.itemRepository))
             FavoritosScreen(
                 viewModel = viewModel,
                 onVolver = { navController.popBackStack() }
@@ -91,7 +95,7 @@ fun AppNav(
         composable(Pantalla.Admin.ruta) {
             val context = LocalContext.current
             val container = AppContainer.obtener(context)
-            val viewModel: AdminViewModel = viewModel(factory = AdminViewModel.provideFactory(container.notificador))
+            val viewModel: AdminViewModel = viewModel(factory = AdminViewModel.provideFactory(container.itemRepository, container.notificador))
             AdminScreen(
                 viewModel = viewModel,
                 onVolver = { navController.popBackStack() }

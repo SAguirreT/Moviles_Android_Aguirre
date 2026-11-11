@@ -16,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.tecsup.laptops.data.repository.FavoritosManager
 import com.tecsup.laptops.domain.model.Item
 import com.tecsup.laptops.ui.UiState
 import com.tecsup.laptops.ui.components.Cargando
@@ -74,7 +73,10 @@ fun FavoritosScreen(
                             )
                         }
                     } else {
-                        FavoritosList(items = actualState.datos)
+                        FavoritosList(
+                            items = actualState.datos,
+                            onToggleFavorito = { viewModel.toggleFavorito(it) }
+                        )
                     }
                 }
             }
@@ -85,6 +87,7 @@ fun FavoritosScreen(
 @Composable
 fun FavoritosList(
     items: List<Item>,
+    onToggleFavorito: (Item) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -124,9 +127,7 @@ fun FavoritosList(
                             fontWeight = FontWeight.Bold
                         )
                     }
-                    IconButton(onClick = {
-                        FavoritosManager.toggleFavorito(laptop)
-                    }) {
+                    IconButton(onClick = { onToggleFavorito(laptop) }) {
                         Icon(
                             imageVector = Icons.Default.Favorite,
                             contentDescription = "Eliminar favorito",

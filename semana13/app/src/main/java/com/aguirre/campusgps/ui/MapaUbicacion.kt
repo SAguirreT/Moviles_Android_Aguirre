@@ -4,8 +4,11 @@ package com.aguirre.campusgps.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 
+import com.aguirre.campusgps.R
 import com.aguirre.campusgps.model.Lugar
 import com.aguirre.campusgps.model.LugarConDistancia
 import com.aguirre.campusgps.model.UbicacionUi
@@ -14,20 +17,22 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
 
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 
 /**
- * COMMIT 8:
- * Mostrar la ubicacion actual y los lugares del campus.
+ * MEJORA IA 1:
+ * Mapa de Google Maps con estilo nocturno.
  *
- * Colores:
- * - Rojo: ubicacion actual del usuario.
- * - Verde: lugar mas cercano.
- * - Azul: los demas lugares.
+ * Marcadores:
+ * Rojo: ubicacion actual.
+ * Verde: lugar mas cercano.
+ * Azul: otros lugares.
  */
 @Composable
 fun MapaUbicacion(
@@ -38,7 +43,23 @@ fun MapaUbicacion(
     modifier: Modifier = Modifier
 ) {
 
-    // Posicion inicial: Lima, Peru.
+    val contexto = LocalContext.current
+
+    // Cargar el estilo oscuro del mapa.
+    val estiloOscuro = remember(contexto) {
+        MapStyleOptions.loadRawResourceStyle(
+            contexto,
+            R.raw.map_style_dark
+        )
+    }
+
+    val propiedadesMapa = remember(estiloOscuro) {
+        MapProperties(
+            mapStyleOptions = estiloOscuro
+        )
+    }
+
+    // Posicion inicial del mapa.
     val camara = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
             LatLng(-12.0464, -77.0428),
@@ -46,10 +67,7 @@ fun MapaUbicacion(
         )
     }
 
-    /**
-     * COMMIT 4:
-     * Animar la camara hacia la ubicacion del usuario.
-     */
+    // Mover la camara a la ubicacion del usuario.
     LaunchedEffect(estado) {
 
         if (estado is UbicacionUi.Lista) {
@@ -69,11 +87,8 @@ fun MapaUbicacion(
         }
     }
 
-    /**
-     * COMMIT 7:
-     * Mover la camara al lugar seleccionado.
-     */
-    LaunchedEffect(seleccionado) {
+    // Mover la camara al lugar seleccionado.
+    LaunchedEffect(seleccionado, lugares) {
 
         if (seleccionado != null) {
 
@@ -101,10 +116,10 @@ fun MapaUbicacion(
         }
     }
 
-    // Dibujar Google Maps.
     GoogleMap(
         modifier = modifier,
-        cameraPositionState = camara
+        cameraPositionState = camara,
+        properties = propiedadesMapa
     ) {
 
         // Marcador rojo de la ubicacion actual.
@@ -124,7 +139,7 @@ fun MapaUbicacion(
             )
         }
 
-        // Marcadores de los cinco lugares del campus.
+        // Marcadores de los lugares.
         lugares.forEach { elemento ->
 
             val lugar = elemento.lugar
@@ -136,16 +151,12 @@ fun MapaUbicacion(
                     lugar.longitud
                 )
 
-                // COMMIT 8:
-                // Determinar si este es el lugar mas cercano.
-                val esMasCercano = masCercano?.id == lugar.id
-
-                // Verde para el mas cercano; azul para los demas.
-                val colorMarcador = if (esMasCercano) {
-                    BitmapDescriptorFactory.HUE_GREEN
-                } else {
-                    BitmapDescriptorFactory.HUE_AZURE
-                }
+                val colorMarcador =
+                    if (masCercano?.id == lugar.id) {
+                        BitmapDescriptorFactory.HUE_GREEN
+                    } else {
+                        BitmapDescriptorFactory.HUE_AZURE
+                    }
 
                 Marker(
                     state = rememberMarkerState(

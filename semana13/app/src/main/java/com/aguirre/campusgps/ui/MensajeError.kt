@@ -12,29 +12,26 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 import com.aguirre.campusgps.model.TipoError
 import com.aguirre.campusgps.model.UbicacionUi
+import com.aguirre.campusgps.ui.theme.ErrorFondo
+import com.aguirre.campusgps.ui.theme.ErrorTexto
 
 /**
- * COMMIT 9:
- * Mostrar mensajes de error y acciones de recuperacion.
+ * MEJORA IA 1:
+ * Mostrar errores con colores oscuros.
  *
- * SIN_PERMISO: Abrir ajustes de la aplicacion.
- * GPS_APAGADO: Reintentar.
- * SIN_PLAY_SERVICES: Mostrar mensaje sin boton.
- * OTRO: Mostrar mensaje sin cerrar la app.
+ * Mantiene las acciones del Commit 9.
  */
 @Composable
 fun MensajeError(
@@ -48,32 +45,30 @@ fun MensajeError(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .padding(horizontal = 12.dp, vertical = 5.dp)
             .background(
-                color = Color(0xFFFFE8E8),
-                shape = RoundedCornerShape(10.dp)
+                ErrorFondo,
+                RoundedCornerShape(14.dp)
             )
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        // Mostrar el mensaje de error.
+        // Mensaje del error.
         Text(
             text = error.mensaje,
-            color = Color(0xFF9D2525),
-            fontWeight = FontWeight.Medium,
-            style = MaterialTheme.typography.bodyMedium
+            color = ErrorTexto,
+            fontWeight = FontWeight.Medium
         )
 
-        // Mostrar una accion segun el tipo de error.
         when (error.tipo) {
 
             TipoError.SIN_PERMISO -> {
 
                 Button(
+                    modifier = Modifier.padding(top = 8.dp),
                     onClick = {
 
-                        // Abrir los ajustes de esta aplicacion.
                         val intent = Intent(
                             Settings.ACTION_APPLICATION_DETAILS_SETTINGS
                         ).apply {
@@ -86,8 +81,7 @@ fun MensajeError(
                         }
 
                         contexto.startActivity(intent)
-                    },
-                    modifier = Modifier.padding(top = 8.dp)
+                    }
                 ) {
                     Text("Abrir ajustes")
                 }
@@ -96,19 +90,19 @@ fun MensajeError(
             TipoError.GPS_APAGADO -> {
 
                 Button(
-                    onClick = onReintentar,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = 8.dp),
+                    onClick = onReintentar
                 ) {
                     Text("Reintentar")
                 }
             }
 
             TipoError.SIN_PLAY_SERVICES -> {
-                // El laboratorio indica que no debe haber boton.
+                // Mostrar mensaje sin boton.
             }
 
             TipoError.OTRO -> {
-                // Mostrar solamente el mensaje de error.
+                // Mostrar mensaje sin boton.
             }
         }
     }

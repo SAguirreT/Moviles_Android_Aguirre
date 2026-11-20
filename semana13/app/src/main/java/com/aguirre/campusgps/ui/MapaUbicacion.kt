@@ -3,12 +3,14 @@ package com.aguirre.campusgps.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 
 import com.aguirre.campusgps.model.LugarConDistancia
 import com.aguirre.campusgps.model.UbicacionUi
 
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 
@@ -18,18 +20,17 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 
 /**
- * COMMIT 4:
- * Implementar Google Maps para visualizar la ubicacion
- * actual del usuario mediante un marcador.
+ * COMMIT 5:
+ * Mostrar los cinco lugares del campus mediante
+ * marcadores azules en Google Maps.
  *
- * Funcionalidades:
- * - Mostrar inicialmente el mapa de Lima.
- * - Configurar un zoom inicial de 12.
- * - Animar la camara hacia la ubicacion actual.
- * - Aplicar un zoom de 16 al obtener la ubicacion.
- * - Mostrar un marcador rojo con el titulo "Estás aquí".
+ * Se conserva la funcionalidad del Commit 4:
+ * - Camara inicial centrada en Lima.
+ * - Animacion hacia la ubicacion del usuario.
+ * - Marcador rojo con el titulo "Estás aquí".
  *
- * Los marcadores del campus se agregaran en el Commit 5.
+ * Este componente solo dibuja la informacion recibida.
+ * No consulta repositorios ni calcula distancias.
  */
 @Composable
 fun MapaUbicacion(
@@ -39,30 +40,24 @@ fun MapaUbicacion(
     modifier: Modifier = Modifier
 ) {
 
-    // Configurar la posicion inicial del mapa en Lima.
+    // Posicion inicial del mapa: Lima, Peru.
     val camara = rememberCameraPositionState {
-
         position = CameraPosition.fromLatLngZoom(
-            LatLng(
-                -12.0464,
-                -77.0428
-            ),
+            LatLng(-12.0464, -77.0428),
             12f
         )
     }
 
-    // Detectar cuando el ViewModel obtiene la ubicacion.
+    // COMMIT 4:
+    // Animar la camara cuando se obtiene la ubicacion.
     LaunchedEffect(estado) {
-
         if (estado is UbicacionUi.Lista) {
 
-            // Obtener las coordenadas actuales del usuario.
             val posicionActual = LatLng(
                 estado.posicion.latitud,
                 estado.posicion.longitud
             )
 
-            // Animar la camara hasta la ubicacion obtenida.
             camara.animate(
                 update = CameraUpdateFactory.newLatLngZoom(
                     posicionActual,
@@ -73,22 +68,21 @@ fun MapaUbicacion(
         }
     }
 
-    // Dibujar el mapa utilizando Google Maps Compose.
+    // Dibujar el mapa de Google.
     GoogleMap(
         modifier = modifier,
         cameraPositionState = camara
     ) {
 
-        // Mostrar el marcador solo cuando exista ubicacion.
+        // COMMIT 4:
+        // Mostrar el marcador rojo del usuario.
         if (estado is UbicacionUi.Lista) {
 
-            // Crear las coordenadas del marcador.
             val posicionActual = LatLng(
                 estado.posicion.latitud,
                 estado.posicion.longitud
             )
 
-            // Crear el marcador rojo de la ubicacion actual.
             Marker(
                 state = rememberMarkerState(
                     key = "ubicacion_actual",
@@ -99,7 +93,40 @@ fun MapaUbicacion(
         }
 
         // COMMIT 5:
-        // Aqui se agregaran los cinco marcadores azules
-        // correspondientes a los lugares del campus.
+        // Recorrer los lugares recibidos desde la pantalla.
+        lugares.forEach { elemento ->
+
+            // Obtener los datos del lugar.
+            val lugar = elemento.lugar
+
+            // Identificar cada marcador mediante su ID.
+            key(lugar.id) {
+
+                // Crear las coordenadas del lugar.
+                val posicionLugar = LatLng(
+                    lugar.latitud,
+                    lugar.longitud
+                )
+
+                // Dibujar el marcador azul.
+                Marker(
+                    state = rememberMarkerState(
+                        key = "lugar_${lugar.id}",
+                        position = posicionLugar
+                    ),
+
+                    // Nombre que aparece al tocar el marcador.
+                    title = lugar.nombre,
+
+                    // Categoria del lugar.
+                    snippet = lugar.categoria,
+
+                    // Color azul solicitado en el laboratorio.
+                    icon = BitmapDescriptorFactory.defaultMarker(
+                        BitmapDescriptorFactory.HUE_AZURE
+                    )
+                )
+            }
+        }
     }
 }

@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
@@ -48,6 +49,7 @@ fun PantallaTareas(vm: TareasViewModel) {
     val primosUi by vm.primos.collectAsState()
     val cargaUi by vm.carga.collectAsState()
     var limiteInput by remember { mutableStateOf("500000") }
+    var simularError by remember { mutableStateOf(false) }
 
     Scaffold(topBar = { TopAppBar(title = { Text("CentroTareas") }) }) { padding ->
         Column(
@@ -121,15 +123,24 @@ fun PantallaTareas(vm: TareasViewModel) {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Dos cargas", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleMedium)
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = simularError,
+                            onCheckedChange = { simularError = it }
+                        )
+                        Text("Simular error de red")
+                    }
+
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(
-                            onClick = { vm.cargarUnaPorUna(simularError = false) },
+                            onClick = { vm.cargarUnaPorUna(simularError = simularError) },
                             enabled = cargaUi !is CargaUi.Cargando
                         ) { 
                             Text("Una por una") 
                         }
                         Button(
-                            onClick = { vm.cargarALaVez(simularError = false) },
+                            onClick = { vm.cargarALaVez(simularError = simularError) },
                             enabled = cargaUi !is CargaUi.Cargando
                         ) { 
                             Text("A la vez") 
@@ -151,7 +162,15 @@ fun PantallaTareas(vm: TareasViewModel) {
                             Text("Pedidos cargados: ${estado.pedidos}")
                             Text("Tiempo total: ${estado.milisegundos} ms", color = MaterialTheme.colorScheme.secondary)
                         }
-                        is CargaUi.Error -> Text("Error: ${estado.mensaje}", color = MaterialTheme.colorScheme.error)
+                        is CargaUi.Error -> Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("Error al cargar: ${estado.mensaje}", color = MaterialTheme.colorScheme.error)
+                            Button(onClick = { 
+                                simularError = false
+                                vm.cargarALaVez(simularError = false) 
+                            }) {
+                                Text("Reintentar sin error")
+                            }
+                        }
                     }
                 }
             }

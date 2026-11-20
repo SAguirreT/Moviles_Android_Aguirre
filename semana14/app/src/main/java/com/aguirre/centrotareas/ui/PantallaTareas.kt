@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.aguirre.centrotareas.model.CargaUi
 import com.aguirre.centrotareas.model.PrimosUi
 import com.aguirre.centrotareas.viewmodel.TareasViewModel
 
@@ -45,6 +46,7 @@ fun PantallaTareas(vm: TareasViewModel) {
     val corriendo by vm.corriendo.collectAsState()
 
     val primosUi by vm.primos.collectAsState()
+    val cargaUi by vm.carga.collectAsState()
     var limiteInput by remember { mutableStateOf("500000") }
 
     Scaffold(topBar = { TopAppBar(title = { Text("CentroTareas") }) }) { padding ->
@@ -117,14 +119,40 @@ fun PantallaTareas(vm: TareasViewModel) {
                 }
             }
             Card(modifier = Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp)) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Dos cargas", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleMedium)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = {}, enabled = false) { Text("Una por una") }
-                        Button(onClick = {}, enabled = false) { Text("A la vez") }
+                        OutlinedButton(
+                            onClick = { vm.cargarUnaPorUna(simularError = false) },
+                            enabled = cargaUi !is CargaUi.Cargando
+                        ) { 
+                            Text("Una por una") 
+                        }
+                        Button(
+                            onClick = { vm.cargarALaVez(simularError = false) },
+                            enabled = cargaUi !is CargaUi.Cargando
+                        ) { 
+                            Text("A la vez") 
+                        }
                     }
-                    Text("Pendiente: Pasos 6 y 7")
-                    // TODO Pasos 6-7: resultados, indicador de carga, error y reintento.
+
+                    when (val estado = cargaUi) {
+                        is CargaUi.Inicial -> Text("Presiona un botón para probar el tipo de carga")
+                        is CargaUi.Cargando -> Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.height(24.dp).padding(end = 8.dp))
+                            Text("Cargando perfil y pedidos...")
+                        }
+                        is CargaUi.Exito -> Column {
+                            Text("Modo: ${estado.modo}", style = MaterialTheme.typography.titleSmall)
+                            Text("Perfil: ${estado.perfil}")
+                            Text("Pedidos cargados: ${estado.pedidos}")
+                            Text("Tiempo total: ${estado.milisegundos} ms", color = MaterialTheme.colorScheme.secondary)
+                        }
+                        is CargaUi.Error -> Text("Error: ${estado.mensaje}", color = MaterialTheme.colorScheme.error)
+                    }
                 }
             }
         }

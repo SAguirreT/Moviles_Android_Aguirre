@@ -8,6 +8,8 @@ import com.aguirre.centrotareas.model.PrimosUi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -119,6 +121,46 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
     // ----- Dos cargas (pasos 6 y 7)
     private val _carga = MutableStateFlow<CargaUi>(CargaUi.Inicial)
     val carga: StateFlow<CargaUi> = _carga.asStateFlow()
-    // TODO Paso 6: fun cargarUnaPorUna() y fun cargarALaVez()
-    // TODO Paso 7: simularError y manejo de errores
+
+    /**
+     * Paso 6: Realiza la carga de perfil y pedidos de forma secuencial (una por una).
+     * Tiempo aproximado total: 2s (perfil) + 3s (pedidos) = 5s.
+     */
+    fun cargarUnaPorUna(simularError: Boolean = false) {
+        _carga.value = CargaUi.Cargando
+        val inicio = System.currentTimeMillis()
+        viewModelScope.launch {
+            try {
+                val perfil = repo.cargarPerfil()
+                val pedidos = repo.cargarPedidos(simularError)
+                val tiempoTotal = System.currentTimeMillis() - inicio
+                _carga.value = CargaUi.Exito("Secuencial", perfil, pedidos.size, tiempoTotal)
+            } catch (e: Exception) {
+                _carga.value = CargaUi.Error(e.message ?: "Error al cargar datos")
+            }
+        }
+    }
+
+    /**
+     * Paso 6: Realiza la carga de perfil y pedidos de forma paralela utilizando async en coroutineScope.
+     * Tiempo aproximado total: max(2s, 3s) = 3s.
+     */
+    fun cargarALaVez(simularError: Boolean = false) {
+        _carga.value = CargaUi.Cargando
+        val inicio = System.currentTimeMillis()
+        viewModelScope.launch {
+            try {
+                coroutineScope {
+                    val defPerfil = async { repo.cargarPerfil() }
+                    val defPedidos = async { repo.cargarPedidos(simularError) }
+                    val perfil = defPerfil.await()
+                    val pedidos = defPedidos.await()
+                    val tiempoTotal = System.currentTimeMillis() - inicio
+                    _carga.value = CargaUi.Exito("En paralelo", perfil, pedidos.size, tiempoTotal)
+                }
+            } catch (e: Exception) {
+                _carga.value = CargaUi.Error(e.message ?: "Error al cargar datos")
+            }
+        }
+    }
 }

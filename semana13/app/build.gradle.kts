@@ -71,7 +71,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
 
     // Google Maps con Jetpack Compose
-    implementation("com.google.maps.android:maps-compose:8.4.0")
+    implementation("com.google.maps.android:maps-compose:6.4.1")
+    implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.core:core:1.15.0")
 
     // Herramientas de depuracion
     debugImplementation("androidx.compose.ui:ui-tooling")

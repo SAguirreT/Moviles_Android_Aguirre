@@ -12,7 +12,19 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
     // ----- Tarea con progreso (pasos 1 a 4)
     private val _mensaje = MutableStateFlow("Listo")
     val mensaje: StateFlow<String> = _mensaje.asStateFlow()
-    // TODO Paso 1: fun tareaLargaMala()
+
+    /**
+     * Paso 1: Tarea pesada que bloquea el hilo principal (Main Thread).
+     * Utiliza Thread.sleep en el hilo principal provocando congelamiento de la UI.
+     */
+    fun tareaLargaMala() {
+        _mensaje.value = "Iniciando tarea pesada en Main Thread..."
+        for (i in 1..5) {
+            Thread.sleep(1000)
+            _mensaje.value = "Procesando segundo $i de 5..."
+        }
+        _mensaje.value = "Tarea finalizada (con bloqueo de UI)"
+    }
     // TODO Paso 2: fun tareaLarga()
     // TODO Paso 3: progreso
     // TODO Paso 4: trabajo (Job), corriendo y cancelar()

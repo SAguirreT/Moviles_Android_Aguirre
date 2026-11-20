@@ -44,7 +44,7 @@ fun PantallaTareas(vm: TareasViewModel) {
                     Text("Tarea con progreso", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleMedium)
                     Spacer(Modifier.height(8.dp))
                     Button(onClick = { toques++ }) { Text("Tócame: $toques") }
-                    Button(onClick = { /* TODO Paso 1: llamar a vm.tareaLargaMala() */ }, enabled = false) { Text("Tarea larga (MAL)") }
+                    Button(onClick = { vm.tareaLargaMala() }, enabled = true) { Text("Tarea larga (MAL)") }
                     Text(mensaje)
                     // TODO Pasos 2-4: botón funcional, barra de progreso y cancelación.
                 }

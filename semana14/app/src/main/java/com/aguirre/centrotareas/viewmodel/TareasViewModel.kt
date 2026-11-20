@@ -18,36 +18,42 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
     private val _mensaje = MutableStateFlow("Listo")
     val mensaje: StateFlow<String> = _mensaje.asStateFlow()
 
+    private val _progreso = MutableStateFlow(0f)
+    val progreso: StateFlow<Float> = _progreso.asStateFlow()
+
     /**
      * Paso 1: Tarea pesada que bloquea el hilo principal (Main Thread).
      * Utiliza Thread.sleep en el hilo principal provocando congelamiento de la UI.
      */
     fun tareaLargaMala() {
         _mensaje.value = "Iniciando tarea pesada en Main Thread..."
+        _progreso.value = 0f
         for (i in 1..5) {
             Thread.sleep(1000)
+            _progreso.value = i / 5f
             _mensaje.value = "Procesando segundo $i de 5..."
         }
         _mensaje.value = "Tarea finalizada (con bloqueo de UI)"
     }
 
     /**
-     * Paso 2: Tarea larga no bloqueante ejecutada en corrutina con viewModelScope y Dispatchers.Default.
-     * Mueve el trabajo fuera del hilo principal para mantener la interfaz de usuario fluida y respondona.
+     * Paso 2 y 3: Tarea larga no bloqueante con actualizacion progresiva en StateFlow.
+     * Mueve el trabajo a corrutina y publica el progreso (0.0 a 1.0) en cada iteracion.
      */
     fun tareaLarga() {
         viewModelScope.launch {
             _mensaje.value = "Iniciando tarea en corrutina..."
+            _progreso.value = 0f
             withContext(Dispatchers.Default) {
-                for (i in 1..5) {
-                    delay(1000) // Suspension no bloqueante de la corrutina
-                    _mensaje.value = "Procesando segundo $i de 5..."
+                for (i in 1..10) {
+                    delay(500) // 10 pasos de 500ms (5 segundos en total)
+                    _progreso.value = i / 10f
+                    _mensaje.value = "Procesando paso $i de 10..."
                 }
             }
             _mensaje.value = "Tarea finalizada sin congelar UI"
         }
     }
-    // TODO Paso 3: progreso
     // TODO Paso 4: trabajo (Job), corriendo y cancelar()
 
     // ----- Contar primos (paso 5)

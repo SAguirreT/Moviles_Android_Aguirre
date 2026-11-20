@@ -12,18 +12,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -34,6 +35,8 @@ import com.aguirre.centrotareas.viewmodel.TareasViewModel
 fun PantallaTareas(vm: TareasViewModel) {
     var toques by remember { mutableIntStateOf(0) }
     val mensaje by vm.mensaje.collectAsState()
+    val progreso by vm.progreso.collectAsState()
+
     Scaffold(topBar = { TopAppBar(title = { Text("CentroTareas") }) }) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
@@ -48,8 +51,13 @@ fun PantallaTareas(vm: TareasViewModel) {
                         Button(onClick = { vm.tareaLargaMala() }) { Text("Tarea larga (MAL)") }
                         Button(onClick = { vm.tareaLarga() }) { Text("Tarea larga (OK)") }
                     }
-                    Text(mensaje)
-                    // TODO Pasos 2-4: botón funcional, barra de progreso y cancelación.
+                    Spacer(Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = { progreso },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text("${(progreso * 100).toInt()}% - $mensaje")
                 }
             }
             Card(modifier = Modifier.fillMaxWidth()) {

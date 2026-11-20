@@ -7,15 +7,22 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -23,7 +30,9 @@ import androidx.compose.runtime.getValue
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 import androidx.core.content.ContextCompat
@@ -32,167 +41,195 @@ import com.aguirre.campusgps.model.UbicacionUi
 import com.aguirre.campusgps.viewmodel.MapaViewModel
 
 /**
- * COMMIT 5:
+ * COMMIT 7:
  * Pantalla principal de CampusGPS.
  *
- * Funcionalidades:
- * - Solicitar permisos de ubicacion.
- * - Obtener latitud y longitud del usuario.
- * - Mostrar Google Maps.
- * - Mostrar el marcador rojo de la ubicacion actual.
- * - Mostrar los cinco marcadores azules del campus.
- *
- * Los lugares se reciben desde el ViewModel para
- * respetar la arquitectura MVVM + Repository.
+ * Diseno basado en el laboratorio GLAB-S13:
+ * - Barra superior azul.
+ * - Boton de ubicacion centrado.
+ * - Mapa en la zona superior.
+ * - Lista inferior de lugares.
+ * - Seleccion de tarjetas y movimiento del mapa.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaMapa(
     vm: MapaViewModel
 ) {
 
-    // Observar el estado de la ubicacion.
+    // Observar los estados del ViewModel.
     val estado by vm.estado.collectAsState()
-
-    // Observar los lugares proporcionados por el ViewModel.
     val lugares by vm.lugares.collectAsState()
+    val seleccionado by vm.seleccionado.collectAsState()
 
-    // Obtener el contexto de Android.
     val contexto = LocalContext.current
 
-    // Solicitar permisos de ubicacion en tiempo de ejecucion.
+    // Color principal similar al documento.
+    val azulPrincipal = Color(0xFF176A9C)
+
+    // Solicitar permisos de ubicacion.
     val lanzador = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { resultado ->
 
-        // Comprobar si se concedio algun permiso.
-        val permisoConcedido = resultado.values.any { it }
-
-        if (permisoConcedido) {
-
-            // Obtener ubicacion cuando se concede el permiso.
+        if (resultado.values.any { it }) {
             vm.buscar()
-
         } else {
-
-            // Informar al ViewModel que el permiso fue denegado.
             vm.permisoDenegado()
         }
     }
 
-    // Comprobar permiso de ubicacion precisa.
+    // Comprobar el permiso preciso.
     val permisoFino = ContextCompat.checkSelfPermission(
         contexto,
         Manifest.permission.ACCESS_FINE_LOCATION
     ) == PackageManager.PERMISSION_GRANTED
 
-    // Comprobar permiso de ubicacion aproximada.
+    // Comprobar el permiso aproximado.
     val permisoAproximado = ContextCompat.checkSelfPermission(
         contexto,
         Manifest.permission.ACCESS_COARSE_LOCATION
     ) == PackageManager.PERMISSION_GRANTED
 
-    // Deshabilitar el boton durante la busqueda.
     val buscando = estado is UbicacionUi.Buscando
 
-    // Contenedor principal de la pantalla.
-    Column(
+    // Estructura principal de Material 3.
+    Scaffold(
         modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
 
-        // Titulo de la aplicacion.
-        Text(
-            text = "CampusGPS",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(16.dp)
-        )
+        // Barra superior azul.
+        topBar = {
 
-        // Boton para obtener la ubicacion.
-        Button(
-            enabled = !buscando,
-            onClick = {
+            TopAppBar(
+                title = {
 
-                if (permisoFino || permisoAproximado) {
+                    Text(
+                        text = "CampusGPS",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
 
-                    // Buscar directamente si ya existe permiso.
-                    vm.buscar()
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = azulPrincipal
+                )
+            )
+        },
 
-                } else {
+        containerColor = Color(0xFFF7F9FC)
 
-                    // Solicitar los permisos necesarios.
-                    lanzador.launch(
-                        arrayOf(
-                            Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION
+    ) { paddingInterno ->
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingInterno),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            // COMMIT 7:
+            // El mapa ocupa el espacio disponible.
+            MapaUbicacion(
+                estado = estado,
+                lugares = lugares,
+                seleccionado = seleccionado,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            )
+
+            // Zona inferior con el boton y la lista.
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFF7F9FC))
+                    .padding(top = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                // Boton principal del laboratorio.
+                Button(
+                    enabled = !buscando,
+                    onClick = {
+
+                        if (permisoFino || permisoAproximado) {
+
+                            vm.buscar()
+
+                        } else {
+
+                            lanzador.launch(
+                                arrayOf(
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                )
+                            )
+                        }
+                    }
+                ) {
+
+                    Text("Obtener mi ubicación")
+                }
+
+                // Mostrar el estado de busqueda.
+                if (buscando) {
+
+                    CircularProgressIndicator(
+                        modifier = Modifier.padding(6.dp)
+                    )
+                }
+
+                // Mostrar las coordenadas obtenidas.
+                if (estado is UbicacionUi.Lista) {
+
+                    val posicion = (estado as UbicacionUi.Lista).posicion
+
+                    Text(
+                        text = "Latitud: ${posicion.latitud}  |  Longitud: ${posicion.longitud}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.DarkGray,
+                        modifier = Modifier.padding(
+                            horizontal = 8.dp,
+                            vertical = 4.dp
                         )
                     )
                 }
-            },
-            modifier = Modifier.padding(bottom = 12.dp)
-        ) {
-            Text("Obtener mi ubicación")
-        }
 
-        // Mostrar mensajes segun el estado del ViewModel.
-        when (val actual = estado) {
+                // Mostrar mensajes del estado.
+                if (estado is UbicacionUi.Inicial) {
 
-            is UbicacionUi.Inicial -> {
-                Text(
-                    text = "Presiona el botón para obtener tu ubicación.",
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-            }
+                    Text(
+                        text = "Presiona el botón para obtener tu ubicación.",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
+                }
 
-            is UbicacionUi.Buscando -> {
-                CircularProgressIndicator()
+                if (estado is UbicacionUi.Error) {
 
-                Text(
-                    text = "Buscando ubicación...",
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
+                    Text(
+                        text = (estado as UbicacionUi.Error).mensaje,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
 
-            is UbicacionUi.Lista -> {
+                // COMMIT 7:
+                // Lista inferior con altura fija de 220 dp.
+                ListaLugares(
+                    lugares = lugares,
+                    seleccionado = seleccionado,
+                    onClick = { id ->
 
-                // Mostrar latitud del usuario.
-                Text(
-                    text = "Latitud: ${actual.posicion.latitud}",
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-
-                // Mostrar longitud del usuario.
-                Text(
-                    text = "Longitud: ${actual.posicion.longitud}",
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-            }
-
-            is UbicacionUi.Error -> {
-
-                // Mostrar el mensaje de error.
-                Text(
-                    text = actual.mensaje,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(12.dp)
+                        // Informar al ViewModel que lugar se toco.
+                        vm.seleccionar(id)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
                 )
             }
         }
-
-        // COMMIT 5:
-        // Dibujar Google Maps y enviar los lugares del campus.
-        MapaUbicacion(
-            estado = estado,
-
-            // Los cinco lugares provienen del ViewModel.
-            lugares = lugares,
-
-            // La seleccion se implementara en el Commit 7.
-            seleccionado = null,
-
-            // El mapa ocupa todo el espacio disponible.
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        )
     }
 }

@@ -64,6 +64,9 @@ class MapaViewModel(
 
     val seleccionado: StateFlow<Int?> =
         _seleccionado.asStateFlow()
+    fun seleccionar(id: Int?) {
+        _seleccionado.value = id
+    }
 
     /**
      * Buscar la ubicacion actual del usuario.

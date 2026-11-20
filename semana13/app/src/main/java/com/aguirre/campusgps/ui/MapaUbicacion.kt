@@ -20,17 +20,9 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 
 /**
- * COMMIT 5:
- * Mostrar los cinco lugares del campus mediante
- * marcadores azules en Google Maps.
- *
- * Se conserva la funcionalidad del Commit 4:
- * - Camara inicial centrada en Lima.
- * - Animacion hacia la ubicacion del usuario.
- * - Marcador rojo con el titulo "Estás aquí".
- *
- * Este componente solo dibuja la informacion recibida.
- * No consulta repositorios ni calcula distancias.
+ * COMMIT 7:
+ * Mostrar los marcadores y mover la camara
+ * cuando el usuario selecciona un lugar.
  */
 @Composable
 fun MapaUbicacion(
@@ -40,7 +32,7 @@ fun MapaUbicacion(
     modifier: Modifier = Modifier
 ) {
 
-    // Posicion inicial del mapa: Lima, Peru.
+    // Camara inicial centrada en Lima.
     val camara = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
             LatLng(-12.0464, -77.0428),
@@ -48,9 +40,12 @@ fun MapaUbicacion(
         )
     }
 
-    // COMMIT 4:
-    // Animar la camara cuando se obtiene la ubicacion.
+    /**
+     * COMMIT 4:
+     * Mover la camara hacia la ubicacion actual.
+     */
     LaunchedEffect(estado) {
+
         if (estado is UbicacionUi.Lista) {
 
             val posicionActual = LatLng(
@@ -68,14 +63,47 @@ fun MapaUbicacion(
         }
     }
 
-    // Dibujar el mapa de Google.
+    /**
+     * COMMIT 7:
+     * Detectar la seleccion de una tarjeta.
+     *
+     * Buscar el lugar por ID y animar la camara.
+     */
+    LaunchedEffect(seleccionado, lugares) {
+
+        if (seleccionado != null) {
+
+            val lugarSeleccionado = lugares
+                .firstOrNull {
+                    it.lugar.id == seleccionado
+                }
+                ?.lugar
+
+            if (lugarSeleccionado != null) {
+
+                val destino = LatLng(
+                    lugarSeleccionado.latitud,
+                    lugarSeleccionado.longitud
+                )
+
+                camara.animate(
+                    update = CameraUpdateFactory.newLatLngZoom(
+                        destino,
+                        17f
+                    ),
+                    durationMs = 1000
+                )
+            }
+        }
+    }
+
+    // Dibujar el mapa.
     GoogleMap(
         modifier = modifier,
         cameraPositionState = camara
     ) {
 
-        // COMMIT 4:
-        // Mostrar el marcador rojo del usuario.
+        // Marcador rojo del usuario.
         if (estado is UbicacionUi.Lista) {
 
             val posicionActual = LatLng(
@@ -92,36 +120,25 @@ fun MapaUbicacion(
             )
         }
 
-        // COMMIT 5:
-        // Recorrer los lugares recibidos desde la pantalla.
+        // Marcadores azules de los lugares.
         lugares.forEach { elemento ->
 
-            // Obtener los datos del lugar.
             val lugar = elemento.lugar
 
-            // Identificar cada marcador mediante su ID.
             key(lugar.id) {
 
-                // Crear las coordenadas del lugar.
                 val posicionLugar = LatLng(
                     lugar.latitud,
                     lugar.longitud
                 )
 
-                // Dibujar el marcador azul.
                 Marker(
                     state = rememberMarkerState(
                         key = "lugar_${lugar.id}",
                         position = posicionLugar
                     ),
-
-                    // Nombre que aparece al tocar el marcador.
                     title = lugar.nombre,
-
-                    // Categoria del lugar.
                     snippet = lugar.categoria,
-
-                    // Color azul solicitado en el laboratorio.
                     icon = BitmapDescriptorFactory.defaultMarker(
                         BitmapDescriptorFactory.HUE_AZURE
                     )

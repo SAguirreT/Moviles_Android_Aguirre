@@ -2,43 +2,36 @@
 package com.aguirre.campusgps.viewmodel
 
 import android.util.Log
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 
 import com.aguirre.campusgps.data.LugaresRepository
 import com.aguirre.campusgps.data.UbicacionRepository
-
+import com.aguirre.campusgps.model.Lugar
 import com.aguirre.campusgps.model.LugarConDistancia
 import com.aguirre.campusgps.model.Posicion
 import com.aguirre.campusgps.model.UbicacionUi
-
 import com.aguirre.campusgps.util.distanciaMetros
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * COMMIT 6:
- * ViewModel principal de CampusGPS.
- *
- * Responsabilidades:
- * - Obtener la ubicacion desde el Repository.
- * - Mantener el estado de la pantalla.
- * - Calcular la distancia hacia cada lugar.
- * - Ordenar los lugares del mas cercano al mas lejano.
- * - Publicar la lista actualizada mediante StateFlow.
- *
- * No utiliza Composables ni recibe Context.
+ * COMMIT 8:
+ * Gestionar ubicacion, distancias, seleccion
+ * y deteccion del lugar mas cercano.
  */
 class MapaViewModel(
     private val ubicacionRepo: UbicacionRepository,
     private val lugaresRepo: LugaresRepository
 ) : ViewModel() {
 
-    // Estado actual de la ubicacion.
+    // Estado de la ubicacion actual.
     private val _estado = MutableStateFlow<UbicacionUi>(
         UbicacionUi.Inicial
     )
@@ -46,7 +39,7 @@ class MapaViewModel(
     val estado: StateFlow<UbicacionUi> =
         _estado.asStateFlow()
 
-    // Cargar inicialmente los cinco lugares sin distancias.
+    // Cargar inicialmente los lugares sin distancia.
     private val _lugares = MutableStateFlow(
         lugaresRepo.obtenerLugares().map { lugar ->
             LugarConDistancia(
@@ -59,24 +52,36 @@ class MapaViewModel(
     val lugares: StateFlow<List<LugarConDistancia>> =
         _lugares.asStateFlow()
 
-    // Preparar el estado de seleccion para el Commit 7.
+    // Lugar seleccionado en la lista.
     private val _seleccionado = MutableStateFlow<Int?>(null)
 
     val seleccionado: StateFlow<Int?> =
         _seleccionado.asStateFlow()
-    fun seleccionar(id: Int?) {
-        _seleccionado.value = id
-    }
 
     /**
-     * Buscar la ubicacion actual del usuario.
+     * COMMIT 8:
+     * Obtener automaticamente el lugar mas cercano.
      *
-     * Si se obtiene correctamente, actualizar las distancias.
-     * Si ocurre un error, publicar el mensaje correspondiente.
+     * Como la lista esta ordenada por distancia,
+     * el primer lugar con metros calculados es el mas cercano.
+     *
+     * Antes de obtener la ubicacion, devuelve null.
+     */
+    val masCercano: StateFlow<Lugar?> = lugares
+        .map { lista ->
+            lista.firstOrNull { it.metros != null }?.lugar
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
+    /**
+     * Obtener la ubicacion actual del usuario.
      */
     fun buscar() {
 
-        // Indicar que la ubicacion esta siendo consultada.
         _estado.value = UbicacionUi.Buscando
 
         viewModelScope.launch {
@@ -84,17 +89,14 @@ class MapaViewModel(
             ubicacionRepo.obtenerPosicion()
                 .onSuccess { posicion ->
 
-                    // COMMIT 6:
-                    // Calcular las distancias cuando la ubicacion
-                    // se obtiene correctamente.
+                    // Calcular y ordenar las distancias.
                     actualizarDistancias(posicion)
 
-                    // Publicar la ubicacion obtenida.
+                    // Actualizar la ubicacion actual.
                     _estado.value = UbicacionUi.Lista(posicion)
                 }
                 .onFailure { error ->
 
-                    // Mostrar el error sin cerrar la aplicacion.
                     _estado.value = UbicacionUi.Error(
                         mensajeDe(error)
                     )
@@ -103,7 +105,7 @@ class MapaViewModel(
     }
 
     /**
-     * Informar que el usuario rechazo los permisos.
+     * Informar cuando se rechaza el permiso.
      */
     fun permisoDenegado() {
 
@@ -113,42 +115,45 @@ class MapaViewModel(
     }
 
     /**
+     * COMMIT 7:
+     * Seleccionar un lugar mediante su identificador.
+     */
+    fun seleccionar(id: Int?) {
+
+        _seleccionado.value = id
+
+        Log.d(
+            "CampusGPS-Seleccion",
+            "Lugar seleccionado: $id"
+        )
+    }
+
+    /**
      * COMMIT 6:
-     * Calcular y ordenar las distancias a los cinco lugares.
-     *
-     * Este metodo es privado porque pertenece
-     * a la logica interna del ViewModel.
+     * Calcular y ordenar las distancias a los lugares.
      */
     private fun actualizarDistancias(pos: Posicion) {
 
-        // Obtener los lugares del Repository.
-        val lugaresOriginales = lugaresRepo.obtenerLugares()
+        val lugaresCalculados = lugaresRepo.obtenerLugares()
+            .map { lugar ->
 
-        // Calcular la distancia de cada lugar.
-        val lugaresCalculados = lugaresOriginales.map { lugar ->
+                val metros = distanciaMetros(
+                    desde = pos,
+                    hasta = lugar
+                )
 
-            val metros = distanciaMetros(
-                desde = pos,
-                hasta = lugar
-            )
+                LugarConDistancia(
+                    lugar = lugar,
+                    metros = metros
+                )
+            }
+            .sortedBy { it.metros }
 
-            LugarConDistancia(
-                lugar = lugar,
-                metros = metros
-            )
-        }
+        // Publicar la lista ordenada.
+        _lugares.value = lugaresCalculados
 
-        // Ordenar del lugar mas cercano al mas lejano.
-        val lugaresOrdenados = lugaresCalculados.sortedBy {
-            it.metros
-        }
-
-        // Publicar los resultados para que la UI los observe.
-        _lugares.value = lugaresOrdenados
-
-        // Mostrar las distancias en Logcat para verificar
-        // el funcionamiento antes del Commit 7.
-        lugaresOrdenados.forEach { elemento ->
+        // Mostrar las distancias en Logcat.
+        lugaresCalculados.forEach { elemento ->
 
             Log.d(
                 "CampusGPS-Distancias",
@@ -158,7 +163,7 @@ class MapaViewModel(
     }
 
     /**
-     * Convertir los errores tecnicos en mensajes comprensibles.
+     * Convertir los errores tecnicos en mensajes claros.
      */
     private fun mensajeDe(error: Throwable): String {
 

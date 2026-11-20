@@ -8,17 +8,18 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 
+
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -38,18 +39,20 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 
 import com.aguirre.campusgps.model.UbicacionUi
+import com.aguirre.campusgps.util.formatearDistancia
 import com.aguirre.campusgps.viewmodel.MapaViewModel
 
 /**
- * COMMIT 7:
- * Pantalla principal de CampusGPS.
+ * COMMIT 8:
+ * Pantalla principal con seleccion del lugar mas cercano.
  *
- * Diseno basado en el laboratorio GLAB-S13:
+ * Diseno basado en GLAB-S13:
  * - Barra superior azul.
- * - Boton de ubicacion centrado.
- * - Mapa en la zona superior.
- * - Lista inferior de lugares.
- * - Seleccion de tarjetas y movimiento del mapa.
+ * - Mapa con marcadores rojos, azules y verdes.
+ * - Boton principal para obtener ubicacion.
+ * - Boton secundario para ir al lugar mas cercano.
+ * - Texto informativo del lugar mas cercano.
+ * - Lista inferior de lugares con distancias.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,14 +60,22 @@ fun PantallaMapa(
     vm: MapaViewModel
 ) {
 
-    // Observar los estados del ViewModel.
+    // Observar el estado de la ubicacion.
     val estado by vm.estado.collectAsState()
+
+    // Observar los cinco lugares del campus.
     val lugares by vm.lugares.collectAsState()
+
+    // Observar el lugar seleccionado.
     val seleccionado by vm.seleccionado.collectAsState()
+
+    // COMMIT 8:
+    // Observar el lugar mas cercano.
+    val masCercano by vm.masCercano.collectAsState()
 
     val contexto = LocalContext.current
 
-    // Color principal similar al documento.
+    // Colores del laboratorio.
     val azulPrincipal = Color(0xFF176A9C)
 
     // Solicitar permisos de ubicacion.
@@ -93,7 +104,13 @@ fun PantallaMapa(
 
     val buscando = estado is UbicacionUi.Buscando
 
-    // Estructura principal de Material 3.
+    // Buscar la distancia correspondiente al lugar mas cercano.
+    val distanciaMasCercano = lugares
+        .firstOrNull {
+            it.lugar.id == masCercano?.id
+        }
+        ?.metros
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
 
@@ -127,27 +144,27 @@ fun PantallaMapa(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // COMMIT 7:
-            // El mapa ocupa el espacio disponible.
+            // Mapa superior con marcadores de tres colores.
             MapaUbicacion(
                 estado = estado,
                 lugares = lugares,
                 seleccionado = seleccionado,
+                masCercano = masCercano,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
             )
 
-            // Zona inferior con el boton y la lista.
+            // Zona inferior del laboratorio.
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color(0xFFF7F9FC))
-                    .padding(top = 8.dp),
+                    .padding(top = 6.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                // Boton principal del laboratorio.
+                // Boton principal.
                 Button(
                     enabled = !buscando,
                     onClick = {
@@ -167,27 +184,35 @@ fun PantallaMapa(
                         }
                     }
                 ) {
-
                     Text("Obtener mi ubicación")
                 }
 
-                // Mostrar el estado de busqueda.
-                if (buscando) {
+                // COMMIT 8:
+                // Boton secundario con borde.
+                OutlinedButton(
+                    enabled = masCercano != null,
+                    onClick = {
 
-                    CircularProgressIndicator(
-                        modifier = Modifier.padding(6.dp)
-                    )
+                        // Seleccionar el lugar mas cercano.
+                        masCercano?.let { lugar ->
+                            vm.seleccionar(lugar.id)
+                        }
+                    }
+                ) {
+                    Text("Ir al más cercano")
                 }
 
-                // Mostrar las coordenadas obtenidas.
-                if (estado is UbicacionUi.Lista) {
-
-                    val posicion = (estado as UbicacionUi.Lista).posicion
+                // Mostrar el nombre y la distancia.
+                if (masCercano != null) {
 
                     Text(
-                        text = "Latitud: ${posicion.latitud}  |  Longitud: ${posicion.longitud}",
+                        text = "Más cercano: ${masCercano!!.nombre} " +
+                                "(${distanciaMasCercano?.let {
+                                    formatearDistancia(it)
+                                } ?: "Sin calcular"})",
+
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.DarkGray,
+                        color = Color(0xFF253445),
                         modifier = Modifier.padding(
                             horizontal = 8.dp,
                             vertical = 4.dp
@@ -195,16 +220,15 @@ fun PantallaMapa(
                     )
                 }
 
-                // Mostrar mensajes del estado.
-                if (estado is UbicacionUi.Inicial) {
+                // Mostrar progreso de busqueda.
+                if (buscando) {
 
-                    Text(
-                        text = "Presiona el botón para obtener tu ubicación.",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(bottom = 6.dp)
+                    CircularProgressIndicator(
+                        modifier = Modifier.padding(6.dp)
                     )
                 }
 
+                // Mostrar mensajes de error.
                 if (estado is UbicacionUi.Error) {
 
                     Text(
@@ -215,14 +239,11 @@ fun PantallaMapa(
                     )
                 }
 
-                // COMMIT 7:
-                // Lista inferior con altura fija de 220 dp.
+                // Lista inferior de los cinco lugares.
                 ListaLugares(
                     lugares = lugares,
                     seleccionado = seleccionado,
                     onClick = { id ->
-
-                        // Informar al ViewModel que lugar se toco.
                         vm.seleccionar(id)
                     },
                     modifier = Modifier

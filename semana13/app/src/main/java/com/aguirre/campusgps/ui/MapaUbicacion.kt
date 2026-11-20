@@ -6,6 +6,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 
+import com.aguirre.campusgps.model.Lugar
 import com.aguirre.campusgps.model.LugarConDistancia
 import com.aguirre.campusgps.model.UbicacionUi
 
@@ -20,19 +21,24 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 
 /**
- * COMMIT 7:
- * Mostrar los marcadores y mover la camara
- * cuando el usuario selecciona un lugar.
+ * COMMIT 8:
+ * Mostrar la ubicacion actual y los lugares del campus.
+ *
+ * Colores:
+ * - Rojo: ubicacion actual del usuario.
+ * - Verde: lugar mas cercano.
+ * - Azul: los demas lugares.
  */
 @Composable
 fun MapaUbicacion(
     estado: UbicacionUi,
     lugares: List<LugarConDistancia>,
     seleccionado: Int?,
+    masCercano: Lugar?,
     modifier: Modifier = Modifier
 ) {
 
-    // Camara inicial centrada en Lima.
+    // Posicion inicial: Lima, Peru.
     val camara = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
             LatLng(-12.0464, -77.0428),
@@ -42,7 +48,7 @@ fun MapaUbicacion(
 
     /**
      * COMMIT 4:
-     * Mover la camara hacia la ubicacion actual.
+     * Animar la camara hacia la ubicacion del usuario.
      */
     LaunchedEffect(estado) {
 
@@ -65,11 +71,9 @@ fun MapaUbicacion(
 
     /**
      * COMMIT 7:
-     * Detectar la seleccion de una tarjeta.
-     *
-     * Buscar el lugar por ID y animar la camara.
+     * Mover la camara al lugar seleccionado.
      */
-    LaunchedEffect(seleccionado, lugares) {
+    LaunchedEffect(seleccionado) {
 
         if (seleccionado != null) {
 
@@ -97,13 +101,13 @@ fun MapaUbicacion(
         }
     }
 
-    // Dibujar el mapa.
+    // Dibujar Google Maps.
     GoogleMap(
         modifier = modifier,
         cameraPositionState = camara
     ) {
 
-        // Marcador rojo del usuario.
+        // Marcador rojo de la ubicacion actual.
         if (estado is UbicacionUi.Lista) {
 
             val posicionActual = LatLng(
@@ -120,7 +124,7 @@ fun MapaUbicacion(
             )
         }
 
-        // Marcadores azules de los lugares.
+        // Marcadores de los cinco lugares del campus.
         lugares.forEach { elemento ->
 
             val lugar = elemento.lugar
@@ -132,6 +136,17 @@ fun MapaUbicacion(
                     lugar.longitud
                 )
 
+                // COMMIT 8:
+                // Determinar si este es el lugar mas cercano.
+                val esMasCercano = masCercano?.id == lugar.id
+
+                // Verde para el mas cercano; azul para los demas.
+                val colorMarcador = if (esMasCercano) {
+                    BitmapDescriptorFactory.HUE_GREEN
+                } else {
+                    BitmapDescriptorFactory.HUE_AZURE
+                }
+
                 Marker(
                     state = rememberMarkerState(
                         key = "lugar_${lugar.id}",
@@ -140,7 +155,7 @@ fun MapaUbicacion(
                     title = lugar.nombre,
                     snippet = lugar.categoria,
                     icon = BitmapDescriptorFactory.defaultMarker(
-                        BitmapDescriptorFactory.HUE_AZURE
+                        colorMarcador
                     )
                 )
             }

@@ -1,12 +1,17 @@
 package com.aguirre.centrotareas.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.aguirre.centrotareas.data.TareasRepository
 import com.aguirre.centrotareas.model.CargaUi
 import com.aguirre.centrotareas.model.PrimosUi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
     // ----- Tarea con progreso (pasos 1 a 4)
@@ -25,7 +30,23 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
         }
         _mensaje.value = "Tarea finalizada (con bloqueo de UI)"
     }
-    // TODO Paso 2: fun tareaLarga()
+
+    /**
+     * Paso 2: Tarea larga no bloqueante ejecutada en corrutina con viewModelScope y Dispatchers.Default.
+     * Mueve el trabajo fuera del hilo principal para mantener la interfaz de usuario fluida y respondona.
+     */
+    fun tareaLarga() {
+        viewModelScope.launch {
+            _mensaje.value = "Iniciando tarea en corrutina..."
+            withContext(Dispatchers.Default) {
+                for (i in 1..5) {
+                    delay(1000) // Suspension no bloqueante de la corrutina
+                    _mensaje.value = "Procesando segundo $i de 5..."
+                }
+            }
+            _mensaje.value = "Tarea finalizada sin congelar UI"
+        }
+    }
     // TODO Paso 3: progreso
     // TODO Paso 4: trabajo (Job), corriendo y cancelar()
 

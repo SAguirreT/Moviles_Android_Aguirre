@@ -3,6 +3,7 @@ package com.aguirre.centrotareas.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aguirre.centrotareas.data.TareasRepository
+import com.aguirre.centrotareas.model.CargaRecord
 import com.aguirre.centrotareas.model.CargaUi
 import com.aguirre.centrotareas.model.PrimosUi
 import kotlinx.coroutines.CancellationException
@@ -117,6 +118,10 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
     private val _carga = MutableStateFlow<CargaUi>(CargaUi.Inicial)
     val carga: StateFlow<CargaUi> = _carga.asStateFlow()
 
+    // ----- Historial comparativo de cargas (Mejora 3 / Commit 12)
+    private val _historialCargas = MutableStateFlow<List<CargaRecord>>(emptyList())
+    val historialCargas: StateFlow<List<CargaRecord>> = _historialCargas.asStateFlow()
+
     /**
      * Paso 6: Realiza la carga de perfil y pedidos de forma secuencial (una por una).
      * Tiempo aproximado total: 2s (perfil) + 3s (pedidos) = 5s.
@@ -129,7 +134,9 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
                 val perfil = repo.cargarPerfil()
                 val pedidos = repo.cargarPedidos(simularError)
                 val tiempoTotal = System.currentTimeMillis() - inicio
-                _carga.value = CargaUi.Exito("Secuencial", perfil, pedidos.size, tiempoTotal)
+                val modo = "Secuencial"
+                _carga.value = CargaUi.Exito(modo, perfil, pedidos.size, tiempoTotal)
+                _historialCargas.value = _historialCargas.value + CargaRecord(modo, tiempoTotal)
             } catch (e: Exception) {
                 _carga.value = CargaUi.Error(e.message ?: "Error al cargar datos")
             }
@@ -151,7 +158,9 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
                     val perfil = defPerfil.await()
                     val pedidos = defPedidos.await()
                     val tiempoTotal = System.currentTimeMillis() - inicio
-                    _carga.value = CargaUi.Exito("En paralelo", perfil, pedidos.size, tiempoTotal)
+                    val modo = "En paralelo"
+                    _carga.value = CargaUi.Exito(modo, perfil, pedidos.size, tiempoTotal)
+                    _historialCargas.value = _historialCargas.value + CargaRecord(modo, tiempoTotal)
                 }
             } catch (e: Exception) {
                 _carga.value = CargaUi.Error(e.message ?: "Error al cargar datos")
@@ -194,7 +203,9 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
 
             val tiempoTotal = System.currentTimeMillis() - inicio
             if (exito) {
-                _carga.value = CargaUi.Exito("Reintentos ($intentos)", perfil, pedidos.size, tiempoTotal)
+                val modo = "Reintentos ($intentos)"
+                _carga.value = CargaUi.Exito(modo, perfil, pedidos.size, tiempoTotal)
+                _historialCargas.value = _historialCargas.value + CargaRecord(modo, tiempoTotal)
             } else {
                 _carga.value = CargaUi.Error(ultimoError?.message ?: "Falló tras $maxIntentos intentos")
             }

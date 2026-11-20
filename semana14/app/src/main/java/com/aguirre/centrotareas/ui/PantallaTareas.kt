@@ -48,6 +48,7 @@ fun PantallaTareas(vm: TareasViewModel) {
 
     val primosUi by vm.primos.collectAsState()
     val cargaUi by vm.carga.collectAsState()
+    val historial by vm.historialCargas.collectAsState()
     var limiteInput by remember { mutableStateOf("500000") }
     var simularError by remember { mutableStateOf(false) }
 
@@ -176,6 +177,14 @@ fun PantallaTareas(vm: TareasViewModel) {
                             }) {
                                 Text("Reintentar sin error")
                             }
+                        }
+                    }
+
+                    if (historial.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        Text("Historial Comparativo:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                        for (rec in historial) {
+                            Text("• ${rec.modo}: ${rec.milisegundos} ms", style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }

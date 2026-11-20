@@ -18,3 +18,11 @@ sealed interface CargaUi {
     ) : CargaUi
     data class Error(val mensaje: String) : CargaUi
 }
+
+/**
+ * Registro de historial comparativo de tiempos de carga para la mejora 3 (Commit 12).
+ */
+data class CargaRecord(
+    val modo: String,
+    val milisegundos: Long
+)

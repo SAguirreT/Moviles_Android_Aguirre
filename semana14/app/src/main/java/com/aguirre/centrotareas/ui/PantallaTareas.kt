@@ -36,6 +36,7 @@ fun PantallaTareas(vm: TareasViewModel) {
     var toques by remember { mutableIntStateOf(0) }
     val mensaje by vm.mensaje.collectAsState()
     val progreso by vm.progreso.collectAsState()
+    val corriendo by vm.corriendo.collectAsState()
 
     Scaffold(topBar = { TopAppBar(title = { Text("CentroTareas") }) }) { padding ->
         Column(
@@ -48,8 +49,9 @@ fun PantallaTareas(vm: TareasViewModel) {
                     Spacer(Modifier.height(8.dp))
                     Button(onClick = { toques++ }) { Text("Tócame: $toques") }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { vm.tareaLargaMala() }) { Text("Tarea larga (MAL)") }
-                        Button(onClick = { vm.tareaLarga() }) { Text("Tarea larga (OK)") }
+                        Button(onClick = { vm.tareaLargaMala() }, enabled = !corriendo) { Text("Tarea larga (MAL)") }
+                        Button(onClick = { vm.tareaLarga() }, enabled = !corriendo) { Text("Tarea larga (OK)") }
+                        OutlinedButton(onClick = { vm.cancelarTarea() }, enabled = corriendo) { Text("Cancelar") }
                     }
                     Spacer(Modifier.height(8.dp))
                     LinearProgressIndicator(

@@ -5,8 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.aguirre.centrotareas.data.TareasRepository
 import com.aguirre.centrotareas.model.CargaUi
 import com.aguirre.centrotareas.model.PrimosUi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +23,11 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
 
     private val _progreso = MutableStateFlow(0f)
     val progreso: StateFlow<Float> = _progreso.asStateFlow()
+
+    private val _corriendo = MutableStateFlow(false)
+    val corriendo: StateFlow<Boolean> = _corriendo.asStateFlow()
+
+    private var tareaJob: Job? = null
 
     /**
      * Paso 1: Tarea pesada que bloquea el hilo principal (Main Thread).
@@ -37,24 +45,41 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
     }
 
     /**
-     * Paso 2 y 3: Tarea larga no bloqueante con actualizacion progresiva en StateFlow.
-     * Mueve el trabajo a corrutina y publica el progreso (0.0 a 1.0) en cada iteracion.
+     * Pasos 2, 3 y 4: Tarea larga controlada con Job, corrutina y capacidad de cancelacion.
+     * Mantiene una referencia al Job asignado y comprueba la cancelacion activa.
      */
     fun tareaLarga() {
-        viewModelScope.launch {
-            _mensaje.value = "Iniciando tarea en corrutina..."
-            _progreso.value = 0f
-            withContext(Dispatchers.Default) {
-                for (i in 1..10) {
-                    delay(500) // 10 pasos de 500ms (5 segundos en total)
-                    _progreso.value = i / 10f
-                    _mensaje.value = "Procesando paso $i de 10..."
+        if (_corriendo.value) return
+        _corriendo.value = true
+        _progreso.value = 0f
+
+        tareaJob = viewModelScope.launch {
+            _mensaje.value = "Iniciando tarea..."
+            try {
+                withContext(Dispatchers.Default) {
+                    for (i in 1..10) {
+                        ensureActive() // Verifica si el Job ha sido cancelado
+                        delay(500)
+                        _progreso.value = i / 10f
+                        _mensaje.value = "Procesando paso $i de 10..."
+                    }
                 }
+                _mensaje.value = "Tarea finalizada con exito"
+            } catch (e: CancellationException) {
+                _mensaje.value = "Tarea cancelada por el usuario"
+                _progreso.value = 0f
+            } finally {
+                _corriendo.value = false
             }
-            _mensaje.value = "Tarea finalizada sin congelar UI"
         }
     }
-    // TODO Paso 4: trabajo (Job), corriendo y cancelar()
+
+    /**
+     * Paso 4: Cancela el Job en ejecucion de forma inmediata.
+     */
+    fun cancelarTarea() {
+        tareaJob?.cancel()
+    }
 
     // ----- Contar primos (paso 5)
     private val _primos = MutableStateFlow<PrimosUi>(PrimosUi.Inicial)

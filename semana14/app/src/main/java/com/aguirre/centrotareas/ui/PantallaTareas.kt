@@ -12,22 +12,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.aguirre.centrotareas.model.CargaRecord
 import com.aguirre.centrotareas.model.CargaUi
 import com.aguirre.centrotareas.model.PrimosUi
 import com.aguirre.centrotareas.viewmodel.TareasViewModel
 
 /**
- * Pantalla principal que respeta estrictamente el diseño oficial del Laboratorio 14:
- * Una única pantalla con desplazamiento vertical y tres tarjetas organizadas:
- * 1. Tarea con progreso (con botones Iniciar/Cancelar, barra de porcentaje y estado).
- * 2. Contar números primos (con campo numérico, recuadro verde de éxito y control de cálculo).
- * 3. Dos cargas (con simulación de errores, recuadros verde/rojo para resultados/errores e historial).
+ * Pantalla principal del Laboratorio 14 — CentroTareas que reproduce fielmente
+ * las capturas oficiales: barra superior azul, fondo claro, tarjetas blancas compactas
+ * con títulos alineados a la izquierda y botones centrados.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaTareas(vm: TareasViewModel) {
-    // Estados observables desde el ViewModel y variables locales de entrada
+    // Estados observables desde el ViewModel
     var toques by remember { mutableIntStateOf(0) }
     val mensaje by vm.mensaje.collectAsState()
     val progreso by vm.progreso.collectAsState()
@@ -36,8 +33,8 @@ fun PantallaTareas(vm: TareasViewModel) {
     val primosUi by vm.primos.collectAsState()
     val cargaUi by vm.carga.collectAsState()
     val historial by vm.historialCargas.collectAsState()
-    
-    // Valor inicial de 500000 para el cálculo de números primos
+
+    // Parámetros de entrada para primos y simulación de error
     var limiteInput by remember { mutableStateOf("500000") }
     var simularError by remember { mutableStateOf(false) }
 
@@ -73,12 +70,19 @@ fun PantallaTareas(vm: TareasViewModel) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(
-                        text = "Tarea con progreso",
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    // Título alineado a la izquierda
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Tarea con progreso",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.align(Alignment.CenterStart)
+                        )
+                    }
 
+                    Spacer(Modifier.height(2.dp))
+
+                    // Botón Tócame centrado
                     Button(
                         onClick = { toques++ },
                         modifier = Modifier.fillMaxWidth()
@@ -86,13 +90,14 @@ fun PantallaTareas(vm: TareasViewModel) {
                         Text("Tócame: $toques")
                     }
 
+                    // Fila de botones Iniciar / Cancelar centrados
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Button(
                             onClick = { vm.tareaLarga() },
-                            enabled = !corriendo, // Iniciar se deshabilita mientras se ejecuta
+                            enabled = !corriendo, // Iniciar activo solo cuando no corre
                             modifier = Modifier.weight(1f)
                         ) {
                             Text("Iniciar")
@@ -100,7 +105,7 @@ fun PantallaTareas(vm: TareasViewModel) {
 
                         OutlinedButton(
                             onClick = { vm.cancelarTarea() },
-                            enabled = corriendo, // Cancelar solo se habilita durante la ejecución
+                            enabled = corriendo, // Cancelar activo solo durante la ejecución
                             modifier = Modifier.weight(1f)
                         ) {
                             Text("Cancelar")
@@ -117,14 +122,14 @@ fun PantallaTareas(vm: TareasViewModel) {
                             .height(8.dp)
                     )
 
-                    // Porcentaje debajo de la barra
+                    // Porcentaje centrado debajo de la barra
                     Text(
                         text = "${(progreso * 100).toInt()}%",
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
 
-                    // Estado debajo del porcentaje (conserva el último valor al cancelar)
+                    // Estado centrado debajo del porcentaje (conserva último valor al cancelar)
                     Text(
                         text = mensaje,
                         style = MaterialTheme.typography.bodyMedium,
@@ -145,13 +150,18 @@ fun PantallaTareas(vm: TareasViewModel) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(
-                        text = "Contar números primos",
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    // Título alineado a la izquierda
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Contar números primos",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.align(Alignment.CenterStart)
+                        )
+                    }
 
                     OutlinedTextField(
                         value = limiteInput,
@@ -188,7 +198,7 @@ fun PantallaTareas(vm: TareasViewModel) {
 
                     Spacer(Modifier.height(4.dp))
 
-                    // Renderizado de estados del cálculo de primos
+                    // Renderizado de estados para primos
                     when (val estado = primosUi) {
                         is PrimosUi.Inicial -> Text("Ingrese un límite numérico para iniciar el conteo.")
                         is PrimosUi.Calculando -> Row(
@@ -196,19 +206,18 @@ fun PantallaTareas(vm: TareasViewModel) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                            Text("Calculando primos en hilo secundario...")
+                            Text("Calculando primos en Dispatchers.Default...")
                         }
                         is PrimosUi.Listo -> {
-                            // Recuadro verde para resultado exitoso
+                            // Recuadro verde claro para el resultado exitoso
                             Surface(
                                 color = Color(0xFFE8F5E9),
                                 shape = MaterialTheme.shapes.small,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Text("¡Cálculo finalizado con éxito!", style = MaterialTheme.typography.titleSmall, color = Color(0xFF2E7D32))
-                                    Text("• Cantidad de primos: ${estado.cantidad}", color = Color(0xFF1B5E20))
-                                    Text("• Tiempo transcurrido: ${estado.milisegundos} ms", color = Color(0xFF1B5E20))
+                                    Text("Primos hasta $limiteInput: ${estado.cantidad}", style = MaterialTheme.typography.titleSmall, color = Color(0xFF2E7D32))
+                                    Text("Tiempo: ${estado.milisegundos} ms", color = Color(0xFF1B5E20))
                                 }
                             }
                         }
@@ -229,23 +238,30 @@ fun PantallaTareas(vm: TareasViewModel) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(
-                        text = "Dos cargas",
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    // Título alineado a la izquierda
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Dos cargas",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.align(Alignment.CenterStart)
+                        )
+                    }
 
+                    // Switch azul con etiqueta Simular error
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Checkbox(
+                        Text("Simular error", style = MaterialTheme.typography.bodyMedium)
+                        Switch(
                             checked = simularError,
                             onCheckedChange = { simularError = it }
                         )
-                        Text("Simular error")
                     }
 
                     Row(
@@ -279,7 +295,7 @@ fun PantallaTareas(vm: TareasViewModel) {
 
                     Spacer(Modifier.height(4.dp))
 
-                    // Renderizado de estados de carga (éxito, error, cargando)
+                    // Renderizado de estados para cargas
                     when (val estado = cargaUi) {
                         is CargaUi.Inicial -> Text("Seleccione un modo de carga.")
                         is CargaUi.Cargando -> Row(
@@ -287,10 +303,10 @@ fun PantallaTareas(vm: TareasViewModel) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                            Text("Cargando perfil y pedidos...")
+                            Text("Procesando solicitudes asíncronas...")
                         }
                         is CargaUi.Exito -> {
-                            // Recuadro verde para éxito
+                            // Recuadro verde claro para éxito
                             Surface(
                                 color = Color(0xFFE8F5E9),
                                 shape = MaterialTheme.shapes.small,
@@ -298,14 +314,14 @@ fun PantallaTareas(vm: TareasViewModel) {
                             ) {
                                 Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                     Text("Modo: ${estado.modo}", style = MaterialTheme.typography.titleSmall, color = Color(0xFF2E7D32))
-                                    Text("• Perfil: ${estado.perfil}", color = Color(0xFF1B5E20))
-                                    Text("• Pedidos: ${estado.pedidos}", color = Color(0xFF1B5E20))
-                                    Text("• Tiempo: ${estado.milisegundos} ms", color = Color(0xFF1B5E20))
+                                    Text("Perfil: ${estado.perfil}", color = Color(0xFF1B5E20))
+                                    Text("Pedidos: ${estado.pedidos}", color = Color(0xFF1B5E20))
+                                    Text("Tiempo: ${estado.milisegundos} ms", color = Color(0xFF1B5E20))
                                 }
                             }
                         }
                         is CargaUi.Error -> {
-                            // Recuadro rojo claro para errores
+                            // Recuadro rojo claro para errores con botón Reintentar
                             Surface(
                                 color = Color(0xFFFFEBEE),
                                 shape = MaterialTheme.shapes.small,
@@ -318,7 +334,8 @@ fun PantallaTareas(vm: TareasViewModel) {
                                             simularError = false
                                             vm.cargarALaVez(simularError = false)
                                         },
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828))
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828)),
+                                        modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Text("Reintentar")
                                     }
@@ -327,14 +344,27 @@ fun PantallaTareas(vm: TareasViewModel) {
                         }
                     }
 
-                    // Historial comparativo de tiempos
+                    // Historial comparativo de tiempos (sección secundaria en mejora-ia)
                     if (historial.isNotEmpty()) {
                         Spacer(Modifier.height(4.dp))
                         HorizontalDivider()
                         Spacer(Modifier.height(4.dp))
-                        Text("Historial Comparativo:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                "Historial Comparativo:",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.align(Alignment.CenterStart)
+                            )
+                        }
                         for (rec in historial) {
-                            Text("• ${rec.modo}: ${rec.milisegundos} ms", style = MaterialTheme.typography.bodySmall)
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                Text(
+                                    "• ${rec.modo}: ${rec.milisegundos} ms",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.align(Alignment.CenterStart)
+                                )
+                            }
                         }
                     }
                 }

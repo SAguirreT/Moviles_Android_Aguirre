@@ -84,7 +84,37 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
     // ----- Contar primos (paso 5)
     private val _primos = MutableStateFlow<PrimosUi>(PrimosUi.Inicial)
     val primos: StateFlow<PrimosUi> = _primos.asStateFlow()
-    // TODO Paso 5: fun contar(hasta: Int) y fun cancelarPrimos()
+
+    private var primosJob: Job? = null
+
+    /**
+     * Paso 5: Inicia el conteo de numeros primos de forma asincrona en Dispatchers.Default.
+     * Mide el tiempo transcurrido en milisegundos y captura la cancelacion por parte del usuario.
+     */
+    fun contar(hasta: Int) {
+        primosJob?.cancel()
+        _primos.value = PrimosUi.Calculando
+        val inicio = System.currentTimeMillis()
+
+        primosJob = viewModelScope.launch {
+            try {
+                val cantidad = repo.contarPrimos(hasta)
+                val duracion = System.currentTimeMillis() - inicio
+                _primos.value = PrimosUi.Listo(cantidad, duracion)
+            } catch (e: CancellationException) {
+                _primos.value = PrimosUi.Cancelado
+            } catch (e: Exception) {
+                _primos.value = PrimosUi.Inicial
+            }
+        }
+    }
+
+    /**
+     * Paso 5: Cancela el calculo de numeros primos en ejecucion.
+     */
+    fun cancelarPrimos() {
+        primosJob?.cancel()
+    }
 
     // ----- Dos cargas (pasos 6 y 7)
     private val _carga = MutableStateFlow<CargaUi>(CargaUi.Inicial)

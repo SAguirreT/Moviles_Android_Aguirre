@@ -1,6 +1,9 @@
 package com.aguirre.centrotareas.data
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
 import java.io.IOException
 
 class TareasRepositoryLocal : TareasRepository {
@@ -15,8 +18,26 @@ class TareasRepositoryLocal : TareasRepository {
         return listOf("Pedido 101", "Pedido 102", "Pedido 103")
     }
 
-    override suspend fun contarPrimos(hasta: Int): Int {
-        // TODO Paso 5: implementar el cálculo en Dispatchers.Default y su cancelación.
-        return 0
+    /**
+     * Paso 5: Cuenta la cantidad de numeros primos desde 2 hasta [hasta] en Dispatchers.Default.
+     * Incluye ensureActive() para verificar y responder a la cancelacion cooperativa durante la ejecucion del bucle.
+     */
+    override suspend fun contarPrimos(hasta: Int): Int = withContext(Dispatchers.Default) {
+        var contador = 0
+        for (n in 2..hasta) {
+            if (n % 2000 == 0) ensureActive()
+            if (esPrimo(n)) contador++
+        }
+        contador
+    }
+
+    private fun esPrimo(n: Int): Boolean {
+        if (n < 2) return false
+        var i = 2
+        while (i * i <= n) {
+            if (n % i == 0) return false
+            i++
+        }
+        return true
     }
 }

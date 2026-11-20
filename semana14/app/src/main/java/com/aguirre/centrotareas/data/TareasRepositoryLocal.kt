@@ -3,6 +3,8 @@ package com.aguirre.centrotareas.data
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import java.io.IOException
 
@@ -16,6 +18,16 @@ class TareasRepositoryLocal : TareasRepository {
         delay(3000)
         if (simularError) throw IOException("Sin conexión")
         return listOf("Pedido 101", "Pedido 102", "Pedido 103")
+    }
+
+    /**
+     * Mejora 1 (Commit 10): Emite el progreso de una tarea larga mediante Flow desde el Repository.
+     */
+    override fun observarProgreso(pasos: Int): Flow<Float> = flow {
+        for (i in 1..pasos) {
+            delay(500)
+            emit(i.toFloat() / pasos)
+        }
     }
 
     /**

@@ -47,8 +47,7 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
     }
 
     /**
-     * Pasos 2, 3 y 4: Tarea larga controlada con Job, corrutina y capacidad de cancelacion.
-     * Mantiene una referencia al Job asignado y comprueba la cancelacion activa.
+     * Mejora 1 (Commit 10): Tarea larga que consume el flujo de progreso emitido por el Repository mediante Flow.
      */
     fun tareaLarga() {
         if (_corriendo.value) return
@@ -56,15 +55,11 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
         _progreso.value = 0f
 
         tareaJob = viewModelScope.launch {
-            _mensaje.value = "Iniciando tarea..."
+            _mensaje.value = "Iniciando tarea con Repository Flow..."
             try {
-                withContext(Dispatchers.Default) {
-                    for (i in 1..10) {
-                        ensureActive() // Verifica si el Job ha sido cancelado
-                        delay(500)
-                        _progreso.value = i / 10f
-                        _mensaje.value = "Procesando paso $i de 10..."
-                    }
+                repo.observarProgreso(10).collect { p ->
+                    _progreso.value = p
+                    _mensaje.value = "Procesando ${(p * 100).toInt()}%..."
                 }
                 _mensaje.value = "Tarea finalizada con exito"
             } catch (e: CancellationException) {

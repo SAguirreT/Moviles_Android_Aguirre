@@ -158,4 +158,46 @@ class TareasViewModel(private val repo: TareasRepository) : ViewModel() {
             }
         }
     }
+
+    /**
+     * Mejora 2 (Commit 11): Carga de datos con reintentos automáticos y espera progresiva (backoff exponencial).
+     * Intenta hasta 3 veces esperando 1s, luego 2s entre reintentos en caso de fallo.
+     */
+    fun cargarConReintentos(simularError: Boolean = false) {
+        _carga.value = CargaUi.Cargando
+        val inicio = System.currentTimeMillis()
+        viewModelScope.launch {
+            var intentos = 0
+            val maxIntentos = 3
+            var exito = false
+            var perfil = ""
+            var pedidos = emptyList<String>()
+            var ultimoError: Exception? = null
+
+            while (intentos < maxIntentos && !exito) {
+                try {
+                    intentos++
+                    coroutineScope {
+                        val defPerfil = async { repo.cargarPerfil() }
+                        val defPedidos = async { repo.cargarPedidos(simularError) }
+                        perfil = defPerfil.await()
+                        pedidos = defPedidos.await()
+                    }
+                    exito = true
+                } catch (e: Exception) {
+                    ultimoError = e
+                    if (intentos < maxIntentos) {
+                        delay(intentos * 1000L) // Espera progresiva: 1s, 2s
+                    }
+                }
+            }
+
+            val tiempoTotal = System.currentTimeMillis() - inicio
+            if (exito) {
+                _carga.value = CargaUi.Exito("Reintentos ($intentos)", perfil, pedidos.size, tiempoTotal)
+            } else {
+                _carga.value = CargaUi.Error(ultimoError?.message ?: "Falló tras $maxIntentos intentos")
+            }
+        }
+    }
 }

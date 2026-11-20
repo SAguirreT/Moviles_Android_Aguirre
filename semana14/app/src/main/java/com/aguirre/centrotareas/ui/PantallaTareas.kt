@@ -145,6 +145,12 @@ fun PantallaTareas(vm: TareasViewModel) {
                         ) { 
                             Text("A la vez") 
                         }
+                        OutlinedButton(
+                            onClick = { vm.cargarConReintentos(simularError = simularError) },
+                            enabled = cargaUi !is CargaUi.Cargando
+                        ) { 
+                            Text("Reintentos") 
+                        }
                     }
 
                     when (val estado = cargaUi) {

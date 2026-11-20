@@ -2,15 +2,19 @@
 package com.aguirre.campusgps.viewmodel
 
 import android.util.Log
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 
 import com.aguirre.campusgps.data.LugaresRepository
 import com.aguirre.campusgps.data.UbicacionRepository
+
 import com.aguirre.campusgps.model.Lugar
 import com.aguirre.campusgps.model.LugarConDistancia
 import com.aguirre.campusgps.model.Posicion
+import com.aguirre.campusgps.model.TipoError
 import com.aguirre.campusgps.model.UbicacionUi
+
 import com.aguirre.campusgps.util.distanciaMetros
 
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,16 +26,24 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * COMMIT 8:
- * Gestionar ubicacion, distancias, seleccion
- * y deteccion del lugar mas cercano.
+ * COMMIT 9:
+ * ViewModel de CampusGPS con manejo de errores.
+ *
+ * Mantiene las funciones de los commits anteriores:
+ * - Buscar ubicacion.
+ * - Calcular distancias.
+ * - Ordenar lugares.
+ * - Seleccionar un lugar.
+ * - Identificar el mas cercano.
+ *
+ * No recibe Context.
  */
 class MapaViewModel(
     private val ubicacionRepo: UbicacionRepository,
     private val lugaresRepo: LugaresRepository
 ) : ViewModel() {
 
-    // Estado de la ubicacion actual.
+    // Estado principal.
     private val _estado = MutableStateFlow<UbicacionUi>(
         UbicacionUi.Inicial
     )
@@ -39,7 +51,7 @@ class MapaViewModel(
     val estado: StateFlow<UbicacionUi> =
         _estado.asStateFlow()
 
-    // Cargar inicialmente los lugares sin distancia.
+    // Lista de lugares.
     private val _lugares = MutableStateFlow(
         lugaresRepo.obtenerLugares().map { lugar ->
             LugarConDistancia(
@@ -52,21 +64,13 @@ class MapaViewModel(
     val lugares: StateFlow<List<LugarConDistancia>> =
         _lugares.asStateFlow()
 
-    // Lugar seleccionado en la lista.
+    // Lugar seleccionado.
     private val _seleccionado = MutableStateFlow<Int?>(null)
 
     val seleccionado: StateFlow<Int?> =
         _seleccionado.asStateFlow()
 
-    /**
-     * COMMIT 8:
-     * Obtener automaticamente el lugar mas cercano.
-     *
-     * Como la lista esta ordenada por distancia,
-     * el primer lugar con metros calculados es el mas cercano.
-     *
-     * Antes de obtener la ubicacion, devuelve null.
-     */
+    // Lugar mas cercano.
     val masCercano: StateFlow<Lugar?> = lugares
         .map { lista ->
             lista.firstOrNull { it.metros != null }?.lugar
@@ -78,10 +82,23 @@ class MapaViewModel(
         )
 
     /**
-     * Obtener la ubicacion actual del usuario.
+     * COMMIT 9:
+     * Comprobar Google Play Services antes de buscar.
      */
     fun buscar() {
 
+        // Comprobar disponibilidad del servicio.
+        if (!ubicacionRepo.playServicesDisponible()) {
+
+            _estado.value = UbicacionUi.Error(
+                mensaje = "Este dispositivo no tiene Google Play Services",
+                tipo = TipoError.SIN_PLAY_SERVICES
+            )
+
+            return
+        }
+
+        // Iniciar la busqueda.
         _estado.value = UbicacionUi.Buscando
 
         viewModelScope.launch {
@@ -89,34 +106,35 @@ class MapaViewModel(
             ubicacionRepo.obtenerPosicion()
                 .onSuccess { posicion ->
 
-                    // Calcular y ordenar las distancias.
+                    // Calcular las distancias.
                     actualizarDistancias(posicion)
 
-                    // Actualizar la ubicacion actual.
+                    // Publicar la ubicacion.
                     _estado.value = UbicacionUi.Lista(posicion)
                 }
                 .onFailure { error ->
 
-                    _estado.value = UbicacionUi.Error(
-                        mensajeDe(error)
-                    )
+                    // Clasificar el error recibido.
+                    _estado.value = clasificarError(error)
                 }
         }
     }
 
     /**
-     * Informar cuando se rechaza el permiso.
+     * COMMIT 9:
+     * Informar que el usuario rechazo los permisos.
      */
     fun permisoDenegado() {
 
         _estado.value = UbicacionUi.Error(
-            "Sin permiso de ubicación no puedo mostrar dónde estás"
+            mensaje = "No tienes permiso para acceder a la ubicación",
+            tipo = TipoError.SIN_PERMISO
         )
     }
 
     /**
      * COMMIT 7:
-     * Seleccionar un lugar mediante su identificador.
+     * Seleccionar un lugar.
      */
     fun seleccionar(id: Int?) {
 
@@ -130,7 +148,7 @@ class MapaViewModel(
 
     /**
      * COMMIT 6:
-     * Calcular y ordenar las distancias a los lugares.
+     * Calcular distancias y ordenar los lugares.
      */
     private fun actualizarDistancias(pos: Posicion) {
 
@@ -149,10 +167,9 @@ class MapaViewModel(
             }
             .sortedBy { it.metros }
 
-        // Publicar la lista ordenada.
+        // Publicar los lugares ordenados.
         _lugares.value = lugaresCalculados
 
-        // Mostrar las distancias en Logcat.
         lugaresCalculados.forEach { elemento ->
 
             Log.d(
@@ -163,17 +180,41 @@ class MapaViewModel(
     }
 
     /**
-     * Convertir los errores tecnicos en mensajes claros.
+     * COMMIT 9:
+     * Convertir excepciones en errores de la interfaz.
      */
-    private fun mensajeDe(error: Throwable): String {
+    private fun clasificarError(error: Throwable): UbicacionUi.Error {
 
-        return when (error) {
+        return when {
 
-            is SecurityException ->
-                "Falta el permiso de ubicación"
+            // El usuario no concedio permisos.
+            error is SecurityException -> {
 
-            else ->
-                error.message ?: "No se pudo obtener la ubicación"
+                UbicacionUi.Error(
+                    mensaje = "No tienes permiso para acceder a la ubicación",
+                    tipo = TipoError.SIN_PERMISO
+                )
+            }
+
+            // GPS desactivado o ubicacion no disponible.
+            error is IllegalStateException &&
+                    error.message == "GPS_APAGADO" -> {
+
+                UbicacionUi.Error(
+                    mensaje = "Activa el GPS e intenta de nuevo",
+                    tipo = TipoError.GPS_APAGADO
+                )
+            }
+
+            // Otros errores.
+            else -> {
+
+                UbicacionUi.Error(
+                    mensaje = error.message
+                        ?: "No se pudo obtener la ubicación",
+                    tipo = TipoError.OTRO
+                )
+            }
         }
     }
 }

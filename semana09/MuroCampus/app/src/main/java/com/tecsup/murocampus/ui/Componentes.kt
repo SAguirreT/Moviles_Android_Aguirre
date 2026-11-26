@@ -80,6 +80,7 @@ fun TarjetaPost(post: Post, onClick: () -> Unit) {
     }
 }
 
+// Filtro de publicaciones por usuario mediante Query / FilterChip
 @Composable
 fun FiltroUsuarios(usuarioSeleccionado: Int?, onSeleccionar: (Int?) -> Unit) {
     val usuarios = listOf(null) + (1..10).toList()

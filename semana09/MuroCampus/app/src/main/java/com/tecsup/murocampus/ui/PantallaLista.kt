@@ -85,7 +85,7 @@ fun PantallaLista(
                     val lista = state.data
                     if (lista.isEmpty()) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text(text = "Sin publicaciones disponibles", style = MaterialTheme.typography.bodyLarge)
+                            Text(text = "No se encontraron publicaciones o coincidencias", style = MaterialTheme.typography.bodyLarge)
                         }
                     } else {
                         LazyColumn(modifier = Modifier.fillMaxSize()) {

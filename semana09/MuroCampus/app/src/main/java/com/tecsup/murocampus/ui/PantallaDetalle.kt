@@ -60,11 +60,12 @@ fun PantallaDetalle(
         onBack()
     }
 
+    // Diálogo de confirmación de eliminación con DELETE (Simulado por JSONPlaceholder)
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Eliminar publicación") },
-            text = { Text("¿Estás seguro de que deseas eliminar esta publicación? Nota: JSONPlaceholder simula la eliminación.") },
+            text = { Text("¿Estás seguro de que deseas eliminar esta publicación? Nota: JSONPlaceholder simula la eliminación y no la conserva permanentemente.") },
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteDialog = false
@@ -116,6 +117,13 @@ fun PantallaDetalle(
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
+            when (eliminarState) {
+                is UiState.Cargando -> {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp))
+                }
+                else -> {}
+            }
+
             when (detalleState) {
                 is UiState.Cargando -> {
                     Box(modifier = Modifier.fillMaxWidth().height(150.dp), contentAlignment = Alignment.Center) {

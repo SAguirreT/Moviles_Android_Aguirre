@@ -15,12 +15,12 @@ private val DarkColorScheme = darkColorScheme(
     onPrimary = Color.Black,
     primaryContainer = BlueDarkColor,
     onPrimaryContainer = Color.White,
-    secondary = BlueBright,
+    secondary = BlueModern,
     background = BackgroundDark,
     surface = SurfaceDark,
     onBackground = TextDark,
     onSurface = TextDark,
-    error = ErrorRedText
+    error = DeleteRed
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -28,14 +28,14 @@ private val LightColorScheme = lightColorScheme(
     onPrimary = Color.White,
     primaryContainer = BluePrimary,
     onPrimaryContainer = Color.White,
-    secondary = BlueBright,
+    secondary = BlueModern,
     background = BackgroundLight,
     surface = SurfaceLight,
     onBackground = TextPrimary,
     onSurface = TextPrimary,
     surfaceVariant = CelestePastel,
     outline = BorderSoft,
-    error = ErrorRedText
+    error = DeleteRed
 )
 
 @Composable

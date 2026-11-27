@@ -1,7 +1,6 @@
 package com.tecsup.murocampus.ui.theme
 
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -16,7 +15,7 @@ private val DarkColorScheme = darkColorScheme(
     onPrimary = Color.Black,
     primaryContainer = BlueDarkColor,
     onPrimaryContainer = Color.White,
-    secondary = BlueLight,
+    secondary = BlueBright,
     background = BackgroundDark,
     surface = SurfaceDark,
     onBackground = TextDark,
@@ -29,7 +28,7 @@ private val LightColorScheme = lightColorScheme(
     onPrimary = Color.White,
     primaryContainer = BluePrimary,
     onPrimaryContainer = Color.White,
-    secondary = BlueSecondary,
+    secondary = BlueBright,
     background = BackgroundLight,
     surface = SurfaceLight,
     onBackground = TextPrimary,

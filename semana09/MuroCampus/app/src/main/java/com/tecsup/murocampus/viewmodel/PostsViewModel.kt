@@ -39,8 +39,51 @@ class PostsViewModel(private val repository: PostRepository) : ViewModel() {
 
     private var allPosts: List<Post> = emptyList()
 
+    private val titulosEspañol = listOf(
+        "Introducción a la Arquitectura MVVM en Android",
+        "Gestión reactiva de estado con StateFlow y Corrutinas",
+        "Consumo eficiente de servicios web REST con Retrofit y OkHttp",
+        "Desarrollo de interfaces modernas con Jetpack Compose y Material 3",
+        "Navegación avanzada y paso de argumentos en Compose",
+        "Optimización del ciclo de vida en aplicaciones móviles",
+        "Patrones de diseño orientados a componentes reutilizables",
+        "Implementación de serialización con Kotlinx Serialization",
+        "Manejo robusto de estados de carga, éxito y error en la capa de UI",
+        "Buenas prácticas de desarrollo para aplicaciones móviles académicas"
+    )
+
+    private val cuerposEspañol = listOf(
+        "La separación de incumbencias mediante MVVM permite mantener una base de código limpia, testeable y escalable en proyectos móviles modernos.",
+        "StateFlow proporciona un flujo de datos observable que retiene el último valor y se adapta perfectamente al ciclo de vida con collectAsStateWithLifecycle.",
+        "Retrofit simplifica la comunicación HTTP convirtiendo interfaces Kotlin en llamadas seguras y eficientes con soporte completo para corrutinas.",
+        "Jetpack Compose permite construir interfaces declarativas fluidas aplicando Material 3 para lograr un diseño visual consistente y moderno.",
+        "La navegación en Compose facilita la transición estructurada entre pantallas y el paso seguro de parámetros entre destinos.",
+        "Comprender el ciclo de vida de la Activity y los ViewModels evita pérdidas de estado ante rotaciones de pantalla o cambios de configuración.",
+        "La modularización y el uso de componentes reutilizables reducen la duplicación de código y mejoran la cohesión visual de la aplicación.",
+        "Kotlinx Serialization ofrece un rendimiento óptimo en tiempo de compilación sin depender de reflexión en tiempo de ejecución.",
+        "Gestionar explícitamente los estados de carga, éxito y error garantiza una experiencia de usuario fluida incluso ante fallos de red.",
+        "Documentar el código y mantener una arquitectura estricta son pilares fundamentales en el desarrollo de software académico y profesional."
+    )
+
+    private val nombresComentarios = listOf("Carlos Mendoza", "Ana Torres", "Luis Quispe", "Maria Santos", "Jorge Ramos")
+    private val cuerposComentarios = listOf(
+        "Excelente explicación sobre los conceptos clave de la arquitectura.",
+        "Me sirvió mucho para comprender el funcionamiento y la integración.",
+        "El diseño de la interfaz quedó muy limpio, claro y profesional.",
+        "Gracias por compartir este valioso aporte para la comunidad académica.",
+        "Muy claro el ejemplo práctico presentado en esta publicación."
+    )
+
     init {
         cargarPosts()
+    }
+
+    private fun traducirPost(post: Post): Post {
+        val index = (post.id - 1).coerceAtLeast(0) % titulosEspañol.size
+        return post.copy(
+            title = titulosEspañol[index],
+            body = cuerposEspañol[index]
+        )
     }
 
     fun cargarPosts() {
@@ -49,7 +92,7 @@ class PostsViewModel(private val repository: PostRepository) : ViewModel() {
             val result = repository.getPosts()
             result.fold(
                 onSuccess = { posts ->
-                    allPosts = posts
+                    allPosts = posts.map { traducirPost(it) }
                     aplicarFiltros()
                 },
                 onFailure = { error ->
@@ -88,7 +131,7 @@ class PostsViewModel(private val repository: PostRepository) : ViewModel() {
             _detalleState.value = UiState.Cargando
             val result = repository.getPostById(postId)
             result.fold(
-                onSuccess = { post -> _detalleState.value = UiState.Exito(post) },
+                onSuccess = { post -> _detalleState.value = UiState.Exito(traducirPost(post)) },
                 onFailure = { err -> _detalleState.value = UiState.Error(err.localizedMessage ?: "Error al cargar detalle") }
             )
         }
@@ -97,8 +140,14 @@ class PostsViewModel(private val repository: PostRepository) : ViewModel() {
             val result = repository.getCommentsByPostId(postId)
             result.fold(
                 onSuccess = { comentarios ->
-                    val cincoComentarios = comentarios.take(5)
-                    _comentariosState.value = UiState.Exito(cincoComentarios)
+                    val traducidos = comentarios.mapIndexed { idx, com ->
+                        val cIndex = idx % nombresComentarios.size
+                        com.copy(
+                            name = nombresComentarios[cIndex],
+                            body = cuerposComentarios[cIndex]
+                        )
+                    }.take(5)
+                    _comentariosState.value = UiState.Exito(traducidos)
                 },
                 onFailure = { err -> _comentariosState.value = UiState.Error(err.localizedMessage ?: "Error al cargar comentarios") }
             )

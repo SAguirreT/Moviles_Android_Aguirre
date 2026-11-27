@@ -47,9 +47,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tecsup.murocampus.ui.theme.BorderSoft
 import com.tecsup.murocampus.ui.theme.CelestePastel
-import com.tecsup.murocampus.ui.theme.ErrorRedText
+import com.tecsup.murocampus.ui.theme.DeleteRed
 import com.tecsup.murocampus.ui.theme.SuccessGreen
-import com.tecsup.murocampus.ui.theme.SuccessGreenText
+import com.tecsup.murocampus.ui.theme.SuccessGreenBg
 import com.tecsup.murocampus.ui.theme.TextPrimary
 import com.tecsup.murocampus.ui.theme.TextSecondary
 import com.tecsup.murocampus.viewmodel.PostsViewModel
@@ -69,7 +69,7 @@ fun PantallaCrear(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nueva Publicación", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                title = { Text("Nueva publicación", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = MaterialTheme.colorScheme.onPrimary)
@@ -113,16 +113,16 @@ fun PantallaCrear(
                 Spacer(modifier = Modifier.width(14.dp))
                 Column {
                     Text(
-                        text = "Comparte algo con tu comunidad",
+                        text = "Crea una publicación",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
+                        fontSize = 20.sp,
                         color = TextPrimary
                     )
                     Text(
-                        text = "Crea un nuevo aviso académico oficial",
+                        text = "Comparte tus ideas con la comunidad",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontSize = 13.sp,
+                        fontSize = 14.sp,
                         color = TextSecondary
                     )
                 }
@@ -130,7 +130,7 @@ fun PantallaCrear(
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 border = BorderStroke(1.dp, BorderSoft)
@@ -138,7 +138,7 @@ fun PantallaCrear(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp)
+                        .padding(22.dp)
                 ) {
                     OutlinedTextField(
                         value = titulo,
@@ -147,7 +147,7 @@ fun PantallaCrear(
                         placeholder = { Text("Ej. Convocatoria a seminario...") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = BorderSoft,
@@ -159,12 +159,12 @@ fun PantallaCrear(
                     OutlinedTextField(
                         value = contenido,
                         onValueChange = { contenido = it },
-                        label = { Text("Contenido del aviso") },
-                        placeholder = { Text("Escribe los detalles e información aquí...") },
+                        label = { Text("Contenido") },
+                        placeholder = { Text("Escribe los detalles de tu publicación aquí...") },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(160.dp),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = BorderSoft,
@@ -194,14 +194,14 @@ fun PantallaCrear(
                 is UiState.Error -> {
                     Text(
                         text = (crearState as UiState.Error).mensaje,
-                        color = ErrorRedText,
+                        color = DeleteRed,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
                     Button(
                         onClick = { viewModel.crearPost(titulo, contenido) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp),
+                            .height(52.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape = RoundedCornerShape(24.dp)
                     ) {
@@ -214,30 +214,30 @@ fun PantallaCrear(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = SuccessGreen),
-                        border = BorderStroke(1.dp, SuccessGreenText.copy(alpha = 0.3f))
+                        shape = RoundedCornerShape(18.dp),
+                        colors = CardDefaults.cardColors(containerColor = SuccessGreenBg),
+                        border = BorderStroke(1.dp, SuccessGreen.copy(alpha = 0.4f))
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
+                                .padding(18.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 Icons.Default.CheckCircle,
                                 contentDescription = "Éxito",
-                                tint = SuccessGreenText,
-                                modifier = Modifier.size(28.dp)
+                                tint = SuccessGreen,
+                                modifier = Modifier.size(30.dp)
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(14.dp))
                             Column {
                                 Text(
-                                    text = "Publicación exitosa",
-                                    style = MaterialTheme.typography.titleMedium,
+                                    text = "¡Publicación exitosa!",
+                                    style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
-                                    color = SuccessGreenText
+                                    fontSize = 17.sp,
+                                    color = SuccessGreen
                                 )
                                 Text(
                                     text = "Identificador asignado: ID ${createdPost.id}",
@@ -249,14 +249,14 @@ fun PantallaCrear(
                         }
                     }
 
-Button(
+                    Button(
                         onClick = {
                             viewModel.resetCrearState()
                             onBack()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp),
+                            .height(52.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape = RoundedCornerShape(24.dp)
                     ) {
@@ -270,14 +270,14 @@ Button(
                         enabled = esValido,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp),
+                            .height(52.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                         ),
                         shape = RoundedCornerShape(24.dp)
                     ) {
-                        Text("Publicar", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text("Publicar ahora", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
             }

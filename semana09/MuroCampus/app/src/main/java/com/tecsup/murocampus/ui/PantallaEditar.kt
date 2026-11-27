@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tecsup.murocampus.ui.theme.BorderSoft
 import com.tecsup.murocampus.ui.theme.CelestePastel
-import com.tecsup.murocampus.ui.theme.ErrorRedText
+import com.tecsup.murocampus.ui.theme.DeleteRed
 import com.tecsup.murocampus.ui.theme.TextPrimary
 import com.tecsup.murocampus.ui.theme.TextSecondary
 import com.tecsup.murocampus.viewmodel.PostsViewModel
@@ -69,7 +69,7 @@ fun PantallaEditar(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Editar Publicación", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                title = { Text("Editar publicación", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = MaterialTheme.colorScheme.onPrimary)
@@ -113,16 +113,16 @@ fun PantallaEditar(
                 Spacer(modifier = Modifier.width(14.dp))
                 Column {
                     Text(
-                        text = "Actualiza la información",
+                        text = "Editar publicación",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
+                        fontSize = 20.sp,
                         color = TextPrimary
                     )
                     Text(
-                        text = "Modifica el título del aviso académico",
+                        text = "Actualiza la información de tu aviso",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontSize = 13.sp,
+                        fontSize = 14.sp,
                         color = TextSecondary
                     )
                 }
@@ -130,7 +130,7 @@ fun PantallaEditar(
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 border = BorderStroke(1.dp, BorderSoft)
@@ -138,13 +138,13 @@ fun PantallaEditar(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp)
+                        .padding(22.dp)
                 ) {
                     Text(
                         text = "Nota: JSONPlaceholder simula la modificación mediante PATCH y no la persiste permanentemente.",
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary,
-                        fontSize = 12.sp,
+                        fontSize = 13.sp,
                         modifier = Modifier.padding(bottom = 14.dp)
                     )
 
@@ -154,7 +154,7 @@ fun PantallaEditar(
                         label = { Text("Título de la publicación") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = BorderSoft,
@@ -177,14 +177,14 @@ fun PantallaEditar(
                 is UiState.Error -> {
                     Text(
                         text = (editarState as UiState.Error).mensaje,
-                        color = ErrorRedText,
+                        color = DeleteRed,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
                     Button(
                         onClick = { viewModel.editarPost(postId, nuevoTitulo) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp),
+                            .height(52.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape = RoundedCornerShape(24.dp)
                     ) {
@@ -205,7 +205,7 @@ fun PantallaEditar(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp),
+                            .height(52.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape = RoundedCornerShape(24.dp)
                     ) {
@@ -218,7 +218,7 @@ fun PantallaEditar(
                             onClick = onBack,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(50.dp),
+                                .height(52.dp),
                             shape = RoundedCornerShape(24.dp),
                             border = BorderStroke(1.dp, BorderSoft)
                         ) {
@@ -230,7 +230,7 @@ fun PantallaEditar(
                             enabled = nuevoTitulo.isNotBlank() && nuevoTitulo != tituloOriginal,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(50.dp),
+                                .height(52.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)

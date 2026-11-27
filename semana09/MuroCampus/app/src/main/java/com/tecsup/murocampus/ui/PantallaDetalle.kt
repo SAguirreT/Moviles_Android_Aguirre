@@ -55,8 +55,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tecsup.murocampus.ui.theme.BorderSoft
 import com.tecsup.murocampus.ui.theme.CelestePastel
-import com.tecsup.murocampus.ui.theme.ErrorRed
-import com.tecsup.murocampus.ui.theme.ErrorRedText
+import com.tecsup.murocampus.ui.theme.DeleteRed
+import com.tecsup.murocampus.ui.theme.ErrorRedBg
 import com.tecsup.murocampus.ui.theme.TextPrimary
 import com.tecsup.murocampus.ui.theme.TextSecondary
 import com.tecsup.murocampus.viewmodel.PostsViewModel
@@ -84,28 +84,28 @@ fun PantallaDetalle(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(28.dp),
             containerColor = MaterialTheme.colorScheme.surface,
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(44.dp)
                             .clip(CircleShape)
-                            .background(ErrorRed),
+                            .background(ErrorRedBg),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Warning, contentDescription = "Advertencia", tint = ErrorRedText, modifier = Modifier.size(22.dp))
+                        Icon(Icons.Default.Warning, contentDescription = "Advertencia", tint = DeleteRed, modifier = Modifier.size(24.dp))
                     }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(text = "¿Eliminar publicación?", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimary)
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Text(text = "¿Eliminar publicación?", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = TextPrimary)
                 }
             },
             text = {
                 Text(
                     text = "¿Estás seguro de que deseas eliminar esta publicación? Nota: JSONPlaceholder simula la eliminación y no la conserva permanentemente.",
                     style = MaterialTheme.typography.bodyMedium,
-                    fontSize = 14.sp,
+                    fontSize = 15.sp,
                     color = TextSecondary
                 )
             },
@@ -115,19 +115,19 @@ fun PantallaDetalle(
                         showDeleteDialog = false
                         viewModel.eliminarPost(postId)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRedText),
-                    shape = RoundedCornerShape(20.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = DeleteRed),
+                    shape = RoundedCornerShape(24.dp)
                 ) {
-                    Text("Eliminar", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                    Text("Eliminar", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                 }
             },
             dismissButton = {
                 OutlinedButton(
                     onClick = { showDeleteDialog = false },
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(24.dp),
                     border = BorderStroke(1.dp, BorderSoft)
                 ) {
-                    Text("Cancelar", color = TextPrimary, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                    Text("Cancelar", color = TextPrimary, fontWeight = FontWeight.Medium, fontSize = 15.sp)
                 }
             }
         )
@@ -141,7 +141,7 @@ fun PantallaDetalle(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Detalle de Publicación", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                title = { Text("Detalle de publicación", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = MaterialTheme.colorScheme.onPrimary)
@@ -180,11 +180,11 @@ fun PantallaDetalle(
                     }
                 }
                 is UiState.Error -> {
-                    Text(text = (detalleState as UiState.Error).mensaje, color = ErrorRedText)
+                    Text(text = (detalleState as UiState.Error).mensaje, color = DeleteRed)
                     Button(
                         onClick = { viewModel.seleccionarPost(postId) },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        shape = RoundedCornerShape(20.dp)
+                        shape = RoundedCornerShape(24.dp)
                     ) {
                         Text("Reintentar")
                     }
@@ -193,7 +193,7 @@ fun PantallaDetalle(
                     val post = (detalleState as UiState.Exito).data
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(18.dp),
+                        shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         border = BorderStroke(1.dp, BorderSoft)
@@ -201,7 +201,7 @@ fun PantallaDetalle(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(20.dp)
+                                .padding(22.dp)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -209,7 +209,7 @@ fun PantallaDetalle(
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(42.dp)
+                                        .size(44.dp)
                                         .clip(CircleShape)
                                         .background(CelestePastel),
                                     contentAlignment = Alignment.Center
@@ -221,17 +221,17 @@ fun PantallaDetalle(
                                         modifier = Modifier.size(22.dp)
                                     )
                                 }
-                                Spacer(modifier = Modifier.width(12.dp))
+                                Spacer(modifier = Modifier.width(14.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = "Usuario ${post.userId}",
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp
+                                        fontSize = 15.sp
                                     )
                                     Text(
-                                        text = "Publicación oficial",
+                                        text = "Publicación académica",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = TextSecondary,
                                         fontSize = 12.sp
@@ -239,7 +239,7 @@ fun PantallaDetalle(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(18.dp))
                             Text(
                                 text = post.title,
                                 style = MaterialTheme.typography.titleLarge,
@@ -251,7 +251,7 @@ fun PantallaDetalle(
                             Text(
                                 text = post.body,
                                 style = MaterialTheme.typography.bodyLarge,
-                                fontSize = 15.sp,
+                                fontSize = 16.sp,
                                 color = TextSecondary,
                                 lineHeight = 24.sp
                             )
@@ -268,7 +268,7 @@ fun PantallaDetalle(
                                     onClick = { onEdit(postId) },
                                     modifier = Modifier
                                         .weight(1f)
-                                        .height(48.dp),
+                                        .height(52.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                     shape = RoundedCornerShape(24.dp)
                                 ) {
@@ -281,13 +281,13 @@ fun PantallaDetalle(
                                     onClick = { showDeleteDialog = true },
                                     modifier = Modifier
                                         .weight(1f)
-                                        .height(48.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
+                                        .height(52.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRedBg),
                                     shape = RoundedCornerShape(24.dp)
                                 ) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = ErrorRedText, modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = DeleteRed, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Eliminar", color = ErrorRedText, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                                    Text("Eliminar", color = DeleteRed, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                                 }
                             }
                         }
@@ -305,7 +305,7 @@ fun PantallaDetalle(
                     text = "Comentarios",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
+                    fontSize = 20.sp,
                     color = TextPrimary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -313,13 +313,14 @@ fun PantallaDetalle(
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
                         .background(CelestePastel)
-                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                        .padding(horizontal = 10.dp, vertical = 3.dp)
                 ) {
                     Text(
                         text = "$totalComentarios",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
                     )
                 }
             }
@@ -332,7 +333,7 @@ fun PantallaDetalle(
                     }
                 }
                 is UiState.Error -> {
-                    Text(text = (comentariosState as UiState.Error).mensaje, color = ErrorRedText)
+                    Text(text = (comentariosState as UiState.Error).mensaje, color = DeleteRed)
                 }
                 is UiState.Exito -> {
                     val comentarios = (comentariosState as UiState.Exito).data
@@ -344,7 +345,7 @@ fun PantallaDetalle(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 6.dp),
-                                shape = RoundedCornerShape(16.dp),
+                                shape = RoundedCornerShape(18.dp),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                                 border = BorderStroke(1.dp, BorderSoft),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
@@ -357,7 +358,7 @@ fun PantallaDetalle(
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .size(36.dp)
+                                            .size(38.dp)
                                             .clip(CircleShape)
                                             .background(CelestePastel),
                                         contentAlignment = Alignment.Center
@@ -382,7 +383,7 @@ fun PantallaDetalle(
                                             text = com.email,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.secondary,
-                                            fontSize = 12.sp
+                                            fontSize = 13.sp
                                         )
                                         Spacer(modifier = Modifier.height(6.dp))
                                         Text(

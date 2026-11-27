@@ -21,25 +21,27 @@ private val DarkColorScheme = darkColorScheme(
     surface = SurfaceDark,
     onBackground = TextDark,
     onSurface = TextDark,
-    error = ErrorRed
+    error = ErrorRedText
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = BluePrimary,
     onPrimary = Color.White,
-    primaryContainer = BlueLight,
+    primaryContainer = BluePrimary,
     onPrimaryContainer = Color.White,
-    secondary = BlueDark,
+    secondary = BlueSecondary,
     background = BackgroundLight,
     surface = SurfaceLight,
     onBackground = TextPrimary,
     onSurface = TextPrimary,
-    error = ErrorRed
+    surfaceVariant = CelestePastel,
+    outline = BorderSoft,
+    error = ErrorRedText
 )
 
 @Composable
 fun MuroCampusTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
